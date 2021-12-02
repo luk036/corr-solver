@@ -7,7 +7,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a2f75bd3cc1e4c34be4741bdd61168ba)](https://app.codacy.com/app/luk036/corr-solver?utm_source=github.com&utm_medium=referral&utm_content=luk036/corr-solver&utm_campaign=badger)
 [![codecov](https://codecov.io/gh/luk036/corr-solver/branch/master/graph/badge.svg)](https://codecov.io/gh/luk036/corr-solver)
 
-Linear Matrix Inequalities Python Code
+Correlation Solver Python Code
 
 ## Features
 
@@ -17,7 +17,7 @@ Linear Matrix Inequalities Python Code
 
 ## Installation
 
--   The core LMI oracle depends on the `ellalgo` and `numpy` modules.
+-   The core corr-solver depends on the `lmi-solver` and `ellalgo` modules.
 
 ## See also
 
