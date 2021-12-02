@@ -21,7 +21,9 @@ jobs:
         pip install ./ellalgo
         git clone https://github.com/luk036/lmi-solver.git
         pip install ./lmi-solver
-
+        git clone https://github.com/luk036/pylds.git
+        pip install ./pylds
+ 
     - name: Lint with flake8
       run: |
         pip install flake8
