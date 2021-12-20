@@ -24,12 +24,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          git clone https://github.com/luk036/ellalgo.git
-          pip install ./ellalgo
-          git clone https://github.com/luk036/lmi-solver.git
-          pip install ./lmi-solver
-          git clone https://github.com/luk036/pylds.git
-          pip install ./pylds
+          pip install git+https://github.com/luk036/ellalgo.git
+          pip install git+https://github.com/luk036/lmi-solver.git
+          pip install git+https://github.com/luk036/pylds.git
           python setup.py develop
 
       - name: Lint with flake8
