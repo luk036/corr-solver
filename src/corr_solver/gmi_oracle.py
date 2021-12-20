@@ -2,7 +2,6 @@
 from typing import Optional, Tuple
 
 import numpy as np
-
 from lmi_solver.chol_ext import chol_ext
 
 Cut = Tuple[np.ndarray, float]
@@ -17,6 +16,7 @@ class gmi_oracle:
     H.neggrad[k](p, x): negative gradient in range p, the k-term
 
     """
+
     def __init__(self, H, m):
         """[summary]
 
@@ -40,6 +40,7 @@ class gmi_oracle:
         Returns:
             Optional[Cut]: [description]
         """
+
         def getA(i, j):
             return self.H.eval(i, j, x)
 

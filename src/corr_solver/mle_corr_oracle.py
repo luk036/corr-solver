@@ -3,7 +3,6 @@
 from typing import Optional, Tuple, Union
 
 import numpy as np
-
 from lmi_solver.lmi0_oracle import lmi0_oracle
 from lmi_solver.lmi_oracle import lmi_oracle
 
@@ -15,8 +14,8 @@ class mle_oracle:
     def __init__(self, Sig: Arr, Y: Arr):
         """Maximum likelyhood estimation:
 
-            min  ​log det Ω(p) + Tr( Ω(p)^{−1} Y )
-            ​s.t.​ 2Y ⪰ Ω(p) ⪰ 0,​
+            min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
+            s.t. 2Y ⪰ Ω(p) ⪰ 0,
 
         Arguments:
             Sig (Arr): Covariance matrix
@@ -63,7 +62,7 @@ class mle_oracle:
             g[i] -= sum(SFsi[k, :] @ SY[:, k] for k in range(m))
 
         f = f1 - t
-        if f < 0.:
-            return (g, 0.), f1
+        if f < 0.0:
+            return (g, 0.0), f1
 
         return (g, f), None

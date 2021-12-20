@@ -11,19 +11,18 @@ Correlation Solver Python Code
 
 ## Features
 
--   No square-root per evaluation.
--   Suport lazy evaluation.
--   Pure Python code.
+- No square-root per evaluation.
+- Suport lazy evaluation.
+- Pure Python code.
 
 ## Installation
 
--   The core corr-solver depends on the `lmi-solver` and `ellalgo` modules.
+- The core corr-solver depends on the `lmi-solver` and `ellalgo` modules.
 
 ## See also
 
--   [corr-solver-cpp](https://github.com/luk036/corr-solver-cpp)
--   [Presentation Slides](https://luk036.github.io/cvx)
-
+- [corr-solver-cpp](https://github.com/luk036/corr-solver-cpp)
+- [Presentation Slides](https://luk036.github.io/cvx)
 
 <!-- pyscaffold-notes -->
 
