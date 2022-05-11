@@ -18,7 +18,7 @@ jobs:
           pip install -r requirements.txt
           pip install git+https://github.com/luk036/ellalgo.git
           pip install git+https://github.com/luk036/lmi-solver.git
-          pip install git+https://github.com/luk036/pylds.git
+          pip install git+https://github.com/luk036/lds-py.git
 
       - name: Lint with flake8
         run: |

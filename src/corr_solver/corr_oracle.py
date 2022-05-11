@@ -2,7 +2,7 @@
 from typing import List, Tuple, Union
 
 import numpy as np
-from pylds.low_discr_seq import halton
+from lds_py.lds import Halton
 
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
@@ -20,8 +20,8 @@ def create_2d_sites(nx=10, ny=8) -> Arr:
     """
     n = nx * ny
     s_end = np.array([10.0, 8.0])
-    hgen = halton([2, 3])
-    s = s_end * np.array([hgen() for _ in range(n)])
+    hgen = Halton([2, 3])
+    s = s_end * np.array([hgen.pop() for _ in range(n)])
     return s
 
 

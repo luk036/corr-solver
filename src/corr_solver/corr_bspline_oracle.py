@@ -23,8 +23,7 @@ def mono_oracle(x):
     n = len(x)
     g = np.zeros(n)
     for i in range(n - 1):
-        fj = x[i + 1] - x[i]
-        if fj > 0:
+        if (fj := x[i + 1] - x[i]) > 0.0:
             g[i] = -1.0
             g[i + 1] = 1.0
             return g, fj
@@ -58,8 +57,7 @@ class mono_decreasing_oracle2:
         # monotonic decreasing constraint
         n = len(x)
         g = np.zeros(n)
-        cut = mono_oracle(x[:-1])
-        if cut:
+        if cut := mono_oracle(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
             g[-1] = 0.0

@@ -54,16 +54,14 @@ class lsq_oracle:
         n = len(x)
         g = np.zeros(n)
 
-        cut = self.lmi0(x[:-1])
-        if cut:
+        if cut := self.lmi0(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
             g[-1] = 0.0
             return (g, fj), None
 
         self.qmi.update(x[-1])
-        cut = self.qmi(x[:-1])
-        if cut:
+        if cut := self.qmi(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
             self.qmi.Q.witness()
@@ -75,7 +73,6 @@ class lsq_oracle:
 
         g[-1] = 1
         tc = x[-1]
-        fj = tc - t
-        if fj > 0:
+        if (fj := tc - t) > 0.0:
             return (g, fj), None
         return (g, 0.0), tc

@@ -37,12 +37,10 @@ class mle_oracle:
         Returns:
             Tuple[Cut, float]: [description]
         """
-        cut = self.lmi(x)
-        if cut:
+        if cut := self.lmi(x):
             return cut, None
 
-        cut = self.lmi0(x)
-        if cut:
+        if cut := self.lmi0(x):
             return cut, None
 
         R = self.lmi0.Q.sqrt()
@@ -62,7 +60,6 @@ class mle_oracle:
             g[i] -= sum(SFsi[k, :] @ SY[:, k] for k in range(m))
 
         f = f1 - t
-        if f < 0.0:
-            return (g, 0.0), f1
-
-        return (g, f), None
+        if (f := f1 - t) >= 0:
+            return (g, f), None
+        return (g, 0.0), f1
