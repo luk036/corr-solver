@@ -27,7 +27,7 @@ class mle_oracle:
         self.lmi = lmi_oracle(Sig, 2 * Y)
         # self.lmi2 = lmi2_oracle(Sig, 2*Y)
 
-    def __call__(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
+    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """[summary]
 
         Arguments:
@@ -37,10 +37,10 @@ class mle_oracle:
         Returns:
             Tuple[Cut, float]: [description]
         """
-        if cut := self.lmi(x):
+        if cut := self.lmi.assess_feas(x):
             return cut, None
 
-        if cut := self.lmi0(x):
+        if cut := self.lmi0.assess_feas(x):
             return cut, None
 
         R = self.lmi0.Q.sqrt()

@@ -31,7 +31,7 @@ class gmi_oracle:
     def update(self, t):
         self.H.update(t)
 
-    def __call__(self, x: np.ndarray) -> Optional[Cut]:
+    def assess_feas(self, x: np.ndarray) -> Optional[Cut]:
         """[summary]
 
         Arguments:

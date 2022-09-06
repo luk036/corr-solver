@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from ellalgo.cutting_plane import bsearch, bsearch_adaptor, cutting_plane_dc
+from ellalgo.cutting_plane import bsearch, bsearch_adaptor, cutting_plane_optim
 from ellalgo.ell import ell
 from pytest import approx
 
@@ -32,7 +32,7 @@ def lsq_corr_core2(Y, n, P):
     x[0] = 1.0
     x[-1] = normY2 / 2
     E = ell(val, x)
-    xb, _, ell_info = cutting_plane_dc(P, E, float("inf"))
+    xb, _, ell_info = cutting_plane_optim(P, E, float("inf"))
     return xb[:-1], ell_info.num_iters, ell_info.feasible
 
 
@@ -92,7 +92,7 @@ def mle_corr_core(Y, n, P):
     # options = Options()
     # options.max_it = 2000
     # options.tol = 1e-8
-    xb, _, ell_info = cutting_plane_dc(P, E, float("inf"))
+    xb, _, ell_info = cutting_plane_optim(P, E, float("inf"))
     # print(num_iters, feasible, status)
     return xb, ell_info.num_iters, ell_info.feasible
 

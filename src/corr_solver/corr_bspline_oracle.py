@@ -44,7 +44,7 @@ class mono_decreasing_oracle2:
         """
         self.basis = basis
 
-    def __call__(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
+    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """[summary]
 
         Arguments:
@@ -62,7 +62,7 @@ class mono_decreasing_oracle2:
             g[:-1] = g1
             g[-1] = 0.0
             return (g, fj), None
-        return self.basis(x, t)
+        return self.basis.assess_optim(x, t)
 
 
 def corr_bspline(Y, s, m, oracle, corr_core):

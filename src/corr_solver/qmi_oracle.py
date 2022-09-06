@@ -86,7 +86,7 @@ class qmi_oracle:
         """
         self.qmi.update(t)
 
-    def __call__(self, x: Arr) -> Optional[Cut]:
+    def assess_feas(self, x: Arr) -> Optional[Cut]:
         """[summary]
 
         Arguments:
@@ -96,4 +96,4 @@ class qmi_oracle:
             Optional[Cut]: [description]
         """
         self.qmi.count = 0
-        return self.gmi(x)
+        return self.gmi.assess_feas(x)

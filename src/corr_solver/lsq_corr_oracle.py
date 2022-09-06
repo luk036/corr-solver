@@ -41,7 +41,7 @@ class lsq_oracle:
         self.qmi = qmi_oracle(F, F0)
         self.lmi0 = lmi0_oracle(F)
 
-    def __call__(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
+    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """[summary]
 
         Arguments:
@@ -54,14 +54,14 @@ class lsq_oracle:
         n = len(x)
         g = np.zeros(n)
 
-        if cut := self.lmi0(x[:-1]):
+        if cut := self.lmi0.assess_feas(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
             g[-1] = 0.0
             return (g, fj), None
 
         self.qmi.update(x[-1])
-        if cut := self.qmi(x[:-1]):
+        if cut := self.qmi.assess_feas(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
             self.qmi.Q.witness()
