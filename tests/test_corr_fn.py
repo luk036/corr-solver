@@ -32,8 +32,8 @@ def lsq_corr_core2(Y, n, P):
     x[0] = 1.0
     x[-1] = normY2 / 2
     E = ell(val, x)
-    xb, _, ell_info = cutting_plane_optim(P, E, float("inf"))
-    return xb[:-1], ell_info.num_iters, ell_info.feasible
+    xb, _, num_iters, _ = cutting_plane_optim(P, E, float("inf"))
+    return xb[:-1], num_iters, xb is not None
 
 
 def lsq_corr_poly2(Y, s, n):
@@ -90,11 +90,11 @@ def mle_corr_core(Y, n, P):
     E = ell(50.0, x)
     # E.use_parallel_cut = False
     # options = Options()
-    # options.max_it = 2000
+    # options.max_iter = 2000
     # options.tol = 1e-8
-    xb, _, ell_info = cutting_plane_optim(P, E, float("inf"))
+    xb, _, num_iters, _ = cutting_plane_optim(P, E, float("inf"))
     # print(num_iters, feasible, status)
-    return xb, ell_info.num_iters, ell_info.feasible
+    return xb, num_iters, xb is not None
 
 
 def mle_corr_poly(Y, s, n):
@@ -123,7 +123,7 @@ def test_data():
 def test_lsq_corr_poly():
     _, num_iters, feasible = lsq_corr_poly(Y, s, 4)
     assert feasible
-    assert num_iters <= 37
+    assert num_iters <= 38
 
 
 def test_lsq_corr_poly2():
