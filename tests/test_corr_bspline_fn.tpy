@@ -4,7 +4,7 @@ from pytest import approx
 import numpy as np
 
 from ellalgo.cutting_plane import bsearch, bsearch_adaptor, cutting_plane_optim
-from ellalgo.ell import ell
+from ellalgo.ell import Ell
 from corr_solver.corr_oracle import create_2d_isotropic, create_2d_sites
 from corr_solver.corr_bspline_oracle import corr_bspline
 from corr_solver.lsq_corr_oracle import lsq_oracle
@@ -32,7 +32,7 @@ def lsq_corr_core2(Y, n, P):
     x = np.zeros(n + 1)  # cannot all zeros
     x[0] = 1.
     x[-1] = normY2 / 2
-    E = ell(val, x)
+    E = Ell(val, x)
     xb, _, num_iters, _ = cutting_plane_optim(P, E, float('inf'))
     return xb[:-1], num_iters, xb is not None
 
@@ -50,7 +50,7 @@ def mle_corr_core(Y, n, P):
     """
     x = np.zeros(n)
     x[0] = 1.
-    E = ell(50., x)
+    E = Ell(50., x)
     # E.use_parallel_cut = False
     # options = Options()
     # options.max_iter = 2000

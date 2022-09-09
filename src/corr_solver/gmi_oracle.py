@@ -2,12 +2,12 @@
 from typing import Optional, Tuple
 
 import numpy as np
-from lmi_solver.chol_ext import chol_ext
+from lmi_solver.chol_ext import LDLTMgr
 
 Cut = Tuple[np.ndarray, float]
 
 
-class gmi_oracle:
+class GMIOracle:
     """Oracle for General Matrix Inequality constraint
 
             H(x) >= 0
@@ -26,7 +26,7 @@ class gmi_oracle:
         """
         self.H = H
         self.m = m
-        self.Q = chol_ext(m)
+        self.Q = LDLTMgr(m)
 
     def update(self, t):
         self.H.update(t)
@@ -41,11 +41,11 @@ class gmi_oracle:
             Optional[Cut]: [description]
         """
 
-        def getA(i, j):
+        def get_elem(i, j):
             return self.H.eval(i, j, x)
 
-        if not self.Q.factor(getA):
-            ep = self.Q.witness()
-            g = self.H.neg_grad_sym_quad(self.Q, x)
-            return g, ep
-        return None
+        if self.Q.factor(get_elem):
+            return None
+        ep = self.Q.witness()
+        g = self.H.neg_grad_sym_quad(self.Q, x)
+        return g, ep

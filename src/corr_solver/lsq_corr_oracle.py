@@ -2,9 +2,9 @@
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
-from lmi_solver.lmi0_oracle import lmi0_oracle
+from lmi_solver.lmi0_oracle import LMI0Oracle
 
-from .qmi_oracle import qmi_oracle
+from .qmi_oracle import QMIOracle
 
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
@@ -38,8 +38,8 @@ class lsq_oracle:
             F (List[Arr]): [description]
             F0 (Arr): [description]
         """
-        self.qmi = qmi_oracle(F, F0)
-        self.lmi0 = lmi0_oracle(F)
+        self.qmi = QMIOracle(F, F0)
+        self.lmi0 = LMI0Oracle(F)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """[summary]

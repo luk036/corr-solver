@@ -3,8 +3,8 @@
 from typing import Optional, Tuple, Union
 
 import numpy as np
-from lmi_solver.lmi0_oracle import lmi0_oracle
-from lmi_solver.lmi_oracle import lmi_oracle
+from lmi_solver.lmi0_oracle import LMI0Oracle
+from lmi_solver.lmi_oracle import LMIOracle
 
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
@@ -23,9 +23,9 @@ class mle_oracle:
         """
         self.Y = Y
         self.Sig = Sig
-        self.lmi0 = lmi0_oracle(Sig)
-        self.lmi = lmi_oracle(Sig, 2 * Y)
-        # self.lmi2 = lmi2_oracle(Sig, 2*Y)
+        self.lmi0 = LMI0Oracle(Sig)
+        self.lmi = LMIOracle(Sig, 2 * Y)
+        # self.lmi2 = LMI2Oracle(Sig, 2*Y)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """[summary]

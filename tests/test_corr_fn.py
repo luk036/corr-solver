@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from ellalgo.cutting_plane import bsearch, bsearch_adaptor, cutting_plane_optim
-from ellalgo.ell import ell
+from ellalgo.ell import Ell
 from pytest import approx
 
 from corr_solver.corr_oracle import corr_poly, create_2d_isotropic, create_2d_sites
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
-from corr_solver.qmi_oracle import qmi_oracle
+from corr_solver.qmi_oracle import QMIOracle
 
 s = create_2d_sites(5, 4)
 Y = create_2d_isotropic(s, 3000)
@@ -31,7 +31,7 @@ def lsq_corr_core2(Y, n, P):
     x = np.zeros(n + 1)  # cannot all zeros
     x[0] = 1.0
     x[-1] = normY2 / 2
-    E = ell(val, x)
+    E = Ell(val, x)
     xb, _, num_iters, _ = cutting_plane_optim(P, E, float("inf"))
     return xb[:-1], num_iters, xb is not None
 
@@ -53,11 +53,12 @@ def lsq_corr_poly2(Y, s, n):
 def lsq_corr_core(Y, n, Q):
     x = np.zeros(n)  # cannot all zeros
     x[0] = 1.0
-    E = ell(256.0, x)
+    E = Ell(256.0, x)
     P = bsearch_adaptor(Q, E)
     normY = np.linalg.norm(Y, "fro")
-    _, bs_info = bsearch(P, [0.0, normY * normY])
-    return P.x_best, bs_info.num_iters, bs_info.feasible
+    upper = normY * normY
+    t, num_iters, _ = bsearch(P, [0.0, upper])
+    return P.x_best, num_iters, t != upper
 
 
 def lsq_corr_poly(Y, s, n):
@@ -71,7 +72,7 @@ def lsq_corr_poly(Y, s, n):
     Returns:
         [type]: [description]
     """
-    return corr_poly(Y, s, n, qmi_oracle, lsq_corr_core)
+    return corr_poly(Y, s, n, QMIOracle, lsq_corr_core)
 
 
 def mle_corr_core(Y, n, P):
@@ -87,7 +88,7 @@ def mle_corr_core(Y, n, P):
     """
     x = np.zeros(n)
     x[0] = 1.0
-    E = ell(50.0, x)
+    E = Ell(50.0, x)
     # E.use_parallel_cut = False
     # options = Options()
     # options.max_iter = 2000

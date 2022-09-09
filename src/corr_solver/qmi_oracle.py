@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
-from .gmi_oracle import gmi_oracle
+from .gmi_oracle import GMIOracle
 
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
@@ -11,7 +11,7 @@ Cut = Tuple[Arr, float]
 # import cholutil
 
 
-class qmi_oracle:
+class QMIOracle:
     class QMI:
         """Oracle for Quadratic Matrix Inequality
 
@@ -75,7 +75,7 @@ class qmi_oracle:
         """
         n, m = F0.shape
         self.qmi = self.QMI(F, F0)
-        self.gmi = gmi_oracle(self.qmi, m)
+        self.gmi = GMIOracle(self.qmi, m)
         self.Q = self.gmi.Q
 
     def update(self, t: float):
