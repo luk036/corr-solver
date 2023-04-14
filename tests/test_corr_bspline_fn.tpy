@@ -33,7 +33,7 @@ def lsq_corr_core2(Y, n, P):
     x[0] = 1.
     x[-1] = normY2 / 2
     E = Ell(val, x)
-    xb, _, num_iters, _ = cutting_plane_optim(P, E, float('inf'))
+    xb, _, num_iters = cutting_plane_optim(P, E, float('inf'))
     return xb[:-1], num_iters, xb is not None
 
 
@@ -55,7 +55,7 @@ def mle_corr_core(Y, n, P):
     # options = Options()
     # options.max_iter = 2000
     # options.tol = 1e-8
-    xb, _, num_iters, _ = cutting_plane_optim(P, E, float('inf'))
+    xb, _, num_iters = cutting_plane_optim(P, E, float('inf'))
     # print(num_iters, feasible, status)
     return xb, num_iters, xb is not None
 
