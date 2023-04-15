@@ -13,13 +13,13 @@ s = create_2d_sites(5, 4)
 Y = create_2d_isotropic(s, 3000)
 
 
-def lsq_corr_core2(Y, n, P):
+def lsq_corr_core2(Y, n, omega):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
         n ([type]): [description]
-        P ([type]): [description]
+        omega ([type]): [description]
 
     Returns:
         [type]: [description]
@@ -31,9 +31,9 @@ def lsq_corr_core2(Y, n, P):
     x = np.zeros(n + 1)  # cannot all zeros
     x[0] = 1.0
     x[-1] = normY2 / 2
-    E = Ell(val, x)
-    xb, _, num_iters = cutting_plane_optim(P, E, float("inf"))
-    return xb[:-1], num_iters, xb is not None
+    ellip = Ell(val, x)
+    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))
+    return xbest[:-1], num_iters, xbest is not None
 
 
 def lsq_corr_poly2(Y, s, n):
@@ -53,12 +53,12 @@ def lsq_corr_poly2(Y, s, n):
 def lsq_corr_core(Y, n, Q):
     x = np.zeros(n)  # cannot all zeros
     x[0] = 1.0
-    E = Ell(256.0, x)
-    P = bsearch_adaptor(Q, E)
+    ellip = Ell(256.0, x)
+    omega = bsearch_adaptor(Q, ellip)
     normY = np.linalg.norm(Y, "fro")
     upper = normY * normY
-    t, num_iters = bsearch(P, [0.0, upper])
-    return P.x_best, num_iters, t != upper
+    t, num_iters = bsearch(omega, [0.0, upper])
+    return omega.x_best, num_iters, t != upper
 
 
 def lsq_corr_poly(Y, s, n):
@@ -75,27 +75,27 @@ def lsq_corr_poly(Y, s, n):
     return corr_poly(Y, s, n, QMIOracle, lsq_corr_core)
 
 
-def mle_corr_core(Y, n, P):
+def mle_corr_core(Y, n, omega):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
         n ([type]): [description]
-        P ([type]): [description]
+        omega ([type]): [description]
 
     Returns:
         [type]: [description]
     """
     x = np.zeros(n)
     x[0] = 1.0
-    E = Ell(50.0, x)
-    # E.use_parallel_cut = False
+    ellip = Ell(50.0, x)
+    # ellip.use_parallel_cut = False
     # options = Options()
     # options.max_iter = 2000
     # options.tol = 1e-8
-    xb, _, num_iters = cutting_plane_optim(P, E, float("inf"))
+    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))
     # print(num_iters, feasible, status)
-    return xb, num_iters, xb is not None
+    return xbest, num_iters, xbest is not None
 
 
 def mle_corr_poly(Y, s, n):

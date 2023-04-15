@@ -116,7 +116,7 @@ def corr_poly(Y, s, m, oracle, corr_core):
         [type]: [description]
     """
     Sig = construct_poly_matrix(s, m)
-    P = oracle(Sig, Y)
-    a, num_iters, feasible = corr_core(Y, m, P)
+    omega = oracle(Sig, Y)
+    a, num_iters, feasible = corr_core(Y, m, omega)
     pa = np.ascontiguousarray(a[::-1])
     return np.poly1d(pa), num_iters, feasible

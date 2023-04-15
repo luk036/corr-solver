@@ -80,8 +80,8 @@ def corr_bspline(Y, s, m, oracle, corr_core):
     """
     Sig, t, k = generate_bspline_info(s, m)
     Pb = oracle(Sig, Y)
-    P = mono_decreasing_oracle2(Pb)
-    c, num_iters, feasible = corr_core(Y, m, P)
+    omega = mono_decreasing_oracle2(Pb)
+    c, num_iters, feasible = corr_core(Y, m, omega)
     return BSpline(t, c, k), num_iters, feasible
 
 
