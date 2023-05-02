@@ -2,7 +2,7 @@
 from typing import Optional, Tuple
 
 import numpy as np
-from lmi_solver.chol_ext import LDLTMgr
+from ellalgo.oracles.ldlt_mgr import LDLTMgr
 
 Cut = Tuple[np.ndarray, float]
 

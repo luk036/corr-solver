@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from ellalgo.cutting_plane import bsearch, bsearch_adaptor, cutting_plane_optim
+from ellalgo.cutting_plane import bsearch, BSearchAdaptor, cutting_plane_optim
 from ellalgo.ell import Ell
 from pytest import approx
 
@@ -54,7 +54,7 @@ def lsq_corr_core(Y, n, Q):
     x = np.zeros(n)  # cannot all zeros
     x[0] = 1.0
     ellip = Ell(256.0, x)
-    omega = bsearch_adaptor(Q, ellip)
+    omega = BSearchAdaptor(Q, ellip)
     normY = np.linalg.norm(Y, "fro")
     upper = normY * normY
     t, num_iters = bsearch(omega, [0.0, upper])

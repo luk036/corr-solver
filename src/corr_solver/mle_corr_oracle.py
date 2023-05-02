@@ -3,8 +3,8 @@
 from typing import Optional, Tuple, Union
 
 import numpy as np
-from lmi_solver.lmi0_oracle import LMI0Oracle
-from lmi_solver.lmi_oracle import LMIOracle
+from ellalgo.oracles.lmi0_oracle import LMI0Oracle
+from ellalgo.oracles.lmi_oracle import LMIOracle
 
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]

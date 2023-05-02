@@ -3,7 +3,7 @@ from pytest import approx
 
 import numpy as np
 
-from ellalgo.cutting_plane import bsearch, bsearch_adaptor, cutting_plane_optim
+from ellalgo.cutting_plane import bsearch, BSearchAdaptor, cutting_plane_optim
 from ellalgo.ell import Ell
 from corr_solver.corr_oracle import create_2d_isotropic, create_2d_sites
 from corr_solver.corr_bspline_oracle import corr_bspline

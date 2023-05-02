@@ -2,7 +2,7 @@
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
-from lmi_solver.lmi0_oracle import LMI0Oracle
+from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 
 from .qmi_oracle import QMIOracle
 
