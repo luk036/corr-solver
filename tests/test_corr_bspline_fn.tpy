@@ -53,7 +53,7 @@ def mle_corr_core(Y, n, omega):
     ellip = Ell(50., x)
     # ellip.use_parallel_cut = False
     # options = Options()
-    # options.max_iter = 2000
+    # options.max_iters = 2000
     # options.tol = 1e-8
     xbest, _, num_iters = cutting_plane_optim(omega, ellip, float('inf'))
     # print(num_iters, feasible, status)
