@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 import numpy as np
 from lds_py.lds import Halton
 
-Arr = Union[np.ndarray]
+Arr = np.ndarray
 Cut = Tuple[Arr, float]
 
 
@@ -47,7 +46,7 @@ def create_2d_isotropic(s: Arr, N=3000) -> Arr:
     for i in range(n):
         for j in range(i, n):
             d = np.array(s[j]) - np.array(s[i])
-            Sig[i, j] = np.exp(-sdkern * (d @ d))
+            Sig[i, j] = np.exp(-sdkern * (d.dot(d)))
             Sig[j, i] = Sig[i, j]
 
     A = np.linalg.cholesky(Sig)
