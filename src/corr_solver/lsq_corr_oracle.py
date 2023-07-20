@@ -10,8 +10,10 @@ Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
 
 
+# The `lsq_oracle` class is an Oracle for least-squares estimation that transforms the problem into a
+# constrained optimization problem.
 class lsq_oracle:
-    """[summary]
+    """Oracle for least-squares estimation
 
         min   ‖ F0 − F(x) ‖
         s.t.  F(x) ⪰ 0
@@ -32,24 +34,31 @@ class lsq_oracle:
     """
 
     def __init__(self, F: List[Arr], F0: Arr):
-        """[summary]
-
-        Arguments:
-            F (List[Arr]): [description]
-            F0 (Arr): [description]
+        """
+        The function initializes the `qmi` and `lmi0` oracles with the given parameters.
+        
+        :param F: A list of arrays (F) representing a set of quadratic matrix inequalities (QMIs)
+        :type F: List[Arr]
+        :param F0: F0 is an array representing the initial feasible solution for the optimization problem
+        :type F0: Arr
         """
         self.qmi = QMIOracle(F, F0)
         self.lmi0 = LMI0Oracle(F)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """[summary]
-
-        Arguments:
-            x (Arr): [description]
-            t (float): the best-so-far optimal value
-
-        Returns:
-            Tuple[Cut, float]: [description]
+        """
+        The `assess_optim` function assesses the optimality of a given solution `x` and returns a tuple
+        containing a cut and an optional float value.
+        
+        :param x: The parameter `x` is of type `Arr`, which is likely a numpy array or a list of numbers. It
+        represents some input values for the optimization problem
+        :type x: Arr
+        :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
+        used in the assessment of the optimization problem
+        :type t: float
+        :return: The function `assess_optim` returns a tuple containing two elements. The first element is a
+        tuple `(g, fj)` which represents a cut and its corresponding objective value. The second element is
+        an optional float value `tc` if `fj > 0.0`, otherwise it is `None`.
         """
         n = len(x)
         g = np.zeros(n)

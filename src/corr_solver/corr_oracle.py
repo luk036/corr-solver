@@ -8,14 +8,14 @@ Cut = Tuple[Arr, float]
 
 
 def create_2d_sites(nx=10, ny=8) -> Arr:
-    """Create a 2d sites object
-
-    Keyword Arguments:
-        nx (int): [description] (default: {10})
-        ny (int): [description] (default: {8})
-
-    Returns:
-        Arr: location of sites
+    """
+    The function `create_2d_sites` generates a 2D array of site locations using the Halton sequence.
+    
+    :param nx: The parameter `nx` represents the number of sites in the x-direction, while `ny`
+    represents the number of sites in the y-direction, defaults to 10 (optional)
+    :param ny: The parameter `ny` represents the number of rows in the 2D sites object, defaults to 8
+    (optional)
+    :return: The function `create_2d_sites` returns a 2D array representing the location of sites.
     """
     n = nx * ny
     s_end = np.array([10.0, 8.0])
@@ -25,16 +25,18 @@ def create_2d_sites(nx=10, ny=8) -> Arr:
 
 
 def create_2d_isotropic(s: Arr, N=3000) -> Arr:
-    """Create a 2d isotropic object
-
-    Arguments:
-        s (Arr): location of sites
-
-    Keyword Arguments:
-        N (int): [description] (default: {3000})
-
-    Returns:
-        Arr: Biased covariance matrix
+    """
+    The function `create_2d_isotropic` generates a biased covariance matrix for a 2D isotropic object
+    based on the location of sites.
+    
+    :param s: The parameter `s` is the location of sites. It is expected to be a 2D array where each row
+    represents the coordinates of a site
+    :type s: Arr
+    :param N: The parameter N represents the number of iterations or samples used to create the 2D
+    isotropic object. It determines the number of times the loop runs to generate random values and
+    calculate the outer product. The larger the value of N, the more accurate the estimation of the
+    biased covariance matrix will be,, defaults to 3000 (optional)
+    :return: The function `create_2d_isotropic` returns a biased covariance matrix `Y`.
     """
     n = s.shape[0]
     sdkern = 0.12  # width of kernel
@@ -62,13 +64,14 @@ def create_2d_isotropic(s: Arr, N=3000) -> Arr:
 
 
 def construct_distance_matrix(s: Arr) -> Arr:
-    """Construct a distance matrix object
-
-    Arguments:
-        s (Arr): location of sites
-
-    Returns:
-        [type]: [description]
+    """
+    The function `construct_distance_matrix` takes in a list of site locations and returns a distance
+    matrix object where each element represents the distance between two sites.
+    
+    :param s: The parameter `s` is the location of sites. It is an array that contains the coordinates
+    of each site
+    :type s: Arr
+    :return: a distance matrix object.
     """
     n = len(s)
     D1 = np.zeros((n, n))
@@ -82,14 +85,16 @@ def construct_distance_matrix(s: Arr) -> Arr:
 
 
 def construct_poly_matrix(s: Arr, m) -> List[Arr]:
-    """Construct distance matrix for polynomial
-
-    Arguments:
-        s (Arr): location of sites
-        m (int): degree of polynomial
-
-    Returns:
-        List[Arr]: [description]
+    """
+    The function `construct_poly_matrix` takes in a list of site locations `s` and a degree `m`, and
+    returns a list of distance matrices for a polynomial of degree `m`.
+    
+    :param s: The parameter `s` is the location of sites, which is expected to be an array. It
+    represents the locations of the sites for which the distance matrix is being constructed
+    :type s: Arr
+    :param m: The parameter `m` represents the degree of the polynomial. It determines the number of
+    distance matrices that will be constructed
+    :return: The function `construct_poly_matrix` returns a list of arrays.
     """
     n = len(s)
     D1 = construct_distance_matrix(s)
@@ -102,17 +107,25 @@ def construct_poly_matrix(s: Arr, m) -> List[Arr]:
 
 
 def corr_poly(Y, s, m, oracle, corr_core):
-    """[summary]
-
-    Arguments:
-        Y ([type]): [description]
-        s ([type]): [description]
-        m ([type]): [description]
-        oracle ([type]): [description]
-        corr_core ([type]): [description]
-
-    Returns:
-        [type]: [description]
+    """
+    The function `corr_poly` takes in a signal `Y`, a sparsity level `s`, a maximum degree `m`, an
+    oracle function, and a correction core function, and returns a polynomial, the number of iterations,
+    and a feasibility indicator.
+    
+    :param Y: The parameter `Y` represents the input data, which is a vector or matrix of shape
+    (n_samples, n_features). It contains the input variables for which we want to find a polynomial
+    correlation
+    :param s: The parameter `s` represents the degree of the polynomial. It determines the number of
+    coefficients in the polynomial
+    :param m: The parameter `m` represents the degree of the polynomial that you want to construct. It
+    determines the number of coefficients in the polynomial
+    :param oracle: The `oracle` parameter is a function that takes in two arguments: `Sig` and `Y`.
+    `Sig` is a matrix and `Y` is a vector. The `oracle` function returns a vector `omega`
+    :param corr_core: The `corr_core` parameter is a function that takes in the following arguments:
+    :return: The function `corr_poly` returns a tuple containing three elements:
+    1. A polynomial object representing the polynomial fit to the data.
+    2. The number of iterations performed during the correction process.
+    3. A boolean value indicating whether a feasible solution was found.
     """
     Sig = construct_poly_matrix(s, m)
     omega = oracle(Sig, Y)

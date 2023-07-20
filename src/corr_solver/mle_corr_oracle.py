@@ -10,6 +10,8 @@ Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
 
 
+# The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
+# certain objective function subject to linear matrix inequality constraints.
 class mle_oracle:
     def __init__(self, Sig: Arr, Y: Arr):
         """Maximum likelyhood estimation:
@@ -17,9 +19,17 @@ class mle_oracle:
             min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
             s.t. 2Y ⪰ Ω(p) ⪰ 0,
 
-        Arguments:
-            Sig (Arr): Covariance matrix
-            Y (Arr): Biased covariance matrix
+        The function initializes an object with given covariance matrix and biased covariance matrix,
+        and creates LMI oracles for optimization.
+        
+        :param Sig: The parameter "Sig" represents the covariance matrix, which is a square matrix that
+        describes the variances and covariances of a set of random variables. It is used in the maximum
+        likelihood estimation algorithm to estimate the parameters of a statistical model
+        :type Sig: Arr
+        :param Y: The parameter Y represents a biased covariance matrix. It is used in the maximum
+        likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
+        than or equal to Ω(p)
+        :type Y: Arr
         """
         self.Y = Y
         self.Sig = Sig
@@ -28,14 +38,19 @@ class mle_oracle:
         # self.lmi2 = LMI2Oracle(Sig, 2*Y)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """[summary]
-
-        Arguments:
-            x (Arr): coefficients of basis functions
-            t (float): the best-so-far optimal value
-
-        Returns:
-            Tuple[Cut, float]: [description]
+        """
+        The `assess_optim` function assesses the feasibility and optimality of a given solution by
+        calculating various values and returning a tuple of cuts and a float value.
+        
+        :param x: The parameter `x` is a numpy array representing the coefficients of basis functions. It is
+        used as input to assess the feasibility of a solution
+        :type x: Arr
+        :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
+        used in the calculation of the objective function `f`
+        :type t: float
+        :return: The function `assess_optim` returns a tuple containing two elements. The first element is a
+        `Cut` object or a tuple `(g, f)` depending on the condition. The second element is either `None` or
+        a float value.
         """
         if cut := self.lmi.assess_feas(x):
             return cut, None

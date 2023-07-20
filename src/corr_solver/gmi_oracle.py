@@ -7,6 +7,8 @@ from ellalgo.oracles.ldlt_mgr import LDLTMgr
 Cut = Tuple[np.ndarray, float]
 
 
+# The `GMIOracle` class is an oracle for a General Matrix Inequality constraint, which evaluates the
+# function and its negative gradient.
 class GMIOracle:
     """Oracle for General Matrix Inequality constraint
 
@@ -18,30 +20,48 @@ class GMIOracle:
     """
 
     def __init__(self, H, m):
-        """[summary]
-
-        Arguments:
-            H ([type]): [description]
-            n (int): dimension
+        """
+        The function initializes an object with attributes H, m, and Q.
+        
+        :param H: The parameter `H` is a variable that represents a matrix. It is not clear what the matrix
+        represents or how it is used in the code
+        :param m: The parameter `m` represents the dimension of the matrix. It is an integer value
         """
         self.H = H
         self.m = m
         self.Q = LDLTMgr(m)
 
     def update(self, t):
+        """
+        The function "update" updates the value of "self.H" with the value of "t".
+        
+        :param t: The parameter "t" in the "update" method is a variable that represents the time or the
+        value that needs to be updated
+        """
         self.H.update(t)
 
     def assess_feas(self, x: np.ndarray) -> Optional[Cut]:
-        """[summary]
-
-        Arguments:
-            x (np.ndarray): [description]
-
-        Returns:
-            Optional[Cut]: [description]
+        """
+        The `assess_feas` function assesses the feasibility of a given input `x` and returns a cut if it is
+        infeasible, otherwise it returns `None`.
+        
+        :param x: An input array of type `np.ndarray`
+        :type x: np.ndarray
+        :return: The function `assess_feas` returns an optional `Cut` object.
         """
 
         def get_elem(i, j):
+            """
+            The function `get_elem` returns the evaluation of the function `H` at the given indices `i` and `j`,
+            with the input `x`.
+            
+            :param i: The parameter "i" is likely an index or a value used to access an element in a data
+            structure or array. It could represent a row index, an index in a list, or any other type of index
+            used to access elements in a data structure
+            :param j: The parameter "j" is likely representing the column index of the element in the matrix
+            :return: The function `get_elem` is returning the result of calling the `eval` method on the `H`
+            object with the arguments `i`, `j`, and `x`.
+            """
             return self.H.eval(i, j, x)
 
         if self.Q.factor(get_elem):
