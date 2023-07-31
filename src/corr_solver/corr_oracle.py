@@ -10,7 +10,7 @@ Cut = Tuple[Arr, float]
 def create_2d_sites(nx=10, ny=8) -> Arr:
     """
     The function `create_2d_sites` generates a 2D array of site locations using the Halton sequence.
-    
+
     :param nx: The parameter `nx` represents the number of sites in the x-direction, while `ny`
     represents the number of sites in the y-direction, defaults to 10 (optional)
     :param ny: The parameter `ny` represents the number of rows in the 2D sites object, defaults to 8
@@ -28,7 +28,7 @@ def create_2d_isotropic(s: Arr, N=3000) -> Arr:
     """
     The function `create_2d_isotropic` generates a biased covariance matrix for a 2D isotropic object
     based on the location of sites.
-    
+
     :param s: The parameter `s` is the location of sites. It is expected to be a 2D array where each row
     represents the coordinates of a site
     :type s: Arr
@@ -67,7 +67,7 @@ def construct_distance_matrix(s: Arr) -> Arr:
     """
     The function `construct_distance_matrix` takes in a list of site locations and returns a distance
     matrix object where each element represents the distance between two sites.
-    
+
     :param s: The parameter `s` is the location of sites. It is an array that contains the coordinates
     of each site
     :type s: Arr
@@ -88,7 +88,7 @@ def construct_poly_matrix(s: Arr, m) -> List[Arr]:
     """
     The function `construct_poly_matrix` takes in a list of site locations `s` and a degree `m`, and
     returns a list of distance matrices for a polynomial of degree `m`.
-    
+
     :param s: The parameter `s` is the location of sites, which is expected to be an array. It
     represents the locations of the sites for which the distance matrix is being constructed
     :type s: Arr
@@ -111,7 +111,7 @@ def corr_poly(Y, s, m, oracle, corr_core):
     The function `corr_poly` takes in a signal `Y`, a sparsity level `s`, a maximum degree `m`, an
     oracle function, and a correction core function, and returns a polynomial, the number of iterations,
     and a feasibility indicator.
-    
+
     :param Y: The parameter `Y` represents the input data, which is a vector or matrix of shape
     (n_samples, n_features). It contains the input variables for which we want to find a polynomial
     correlation

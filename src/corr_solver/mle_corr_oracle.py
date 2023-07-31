@@ -21,7 +21,7 @@ class mle_oracle:
 
         The function initializes an object with given covariance matrix and biased covariance matrix,
         and creates LMI oracles for optimization.
-        
+
         :param Sig: The parameter "Sig" represents the covariance matrix, which is a square matrix that
         describes the variances and covariances of a set of random variables. It is used in the maximum
         likelihood estimation algorithm to estimate the parameters of a statistical model
@@ -41,7 +41,7 @@ class mle_oracle:
         """
         The `assess_optim` function assesses the feasibility and optimality of a given solution by
         calculating various values and returning a tuple of cuts and a float value.
-        
+
         :param x: The parameter `x` is a numpy array representing the coefficients of basis functions. It is
         used as input to assess the feasibility of a solution
         :type x: Arr

@@ -14,7 +14,7 @@ def mono_oracle(x):
     """
     The `mono_oracle` function is an oracle that checks if a given array `x` satisfies the monotonic
     decreasing constraint and returns the gradient and the first violation if it exists.
-    
+
     :param x: The parameter `x` is a list or array of numbers. It represents a sequence of values that
     we want to check for the monotonic decreasing constraint
     :return: The function `mono_oracle` returns two values: `g` and `fj`. `g` is a numpy array of zeros
@@ -44,7 +44,7 @@ class mono_decreasing_oracle2:
     def __init__(self, basis):
         """
         The function initializes an object with a given basis.
-        
+
         :param basis: The `basis` parameter is a variable that is passed to the `__init__` method of a
         class. It is used to initialize the `basis` attribute of the class instance. The `basis` attribute
         can then be accessed and used throughout the class methods
@@ -55,7 +55,7 @@ class mono_decreasing_oracle2:
         """
         The function assess_optim assesses the optimality of a given solution by checking if it satisfies a
         monotonic decreasing constraint, and if not, it calls another function to assess optimality.
-        
+
         :param x: An array of values
         :type x: Arr
         :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
@@ -79,7 +79,7 @@ def corr_bspline(Y, s, m, oracle, corr_core):
     """
     The `corr_bspline` function takes in input parameters `Y`, `s`, `m`, `oracle`, and `corr_core`, and
     returns a BSpline object, the number of iterations, and a feasibility indicator.
-    
+
     :param Y: The input data Y for the B-spline algorithm
     :param s: The parameter `s` represents the number of control points in the B-spline curve. It
     determines the flexibility and smoothness of the curve
@@ -103,7 +103,7 @@ def generate_bspline_info(s, m):
     """
     The function `generate_bspline_info` generates B-spline information given a set of points and a
     desired number of B-splines.
-    
+
     :param s: The parameter `s` is a list or array of data points that define the shape or curve that
     you want to approximate using B-splines
     :param m: The parameter `m` represents the number of B-spline basis functions to generate. It

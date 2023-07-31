@@ -31,7 +31,7 @@ class QMIOracle:
         def __init__(self, F: List[Arr], F0: Arr):
             """
             The function initializes the variables F, F0, and Fx with the given arguments.
-            
+
             :param F: F is a list of arrays. Each array in the list represents a feature vector. The
             feature vectors can have different lengths, but they all have the same number of columns
             :type F: List[Arr]
@@ -47,7 +47,7 @@ class QMIOracle:
         def update(self, t: float):
             """
             The `update` function updates the value of `self.t` with the input `t`.
-            
+
             :param t: The parameter `t` represents the best-so-far optimal value
             :type t: float
             """
@@ -56,7 +56,7 @@ class QMIOracle:
         def eval(self, i, j, x: Arr) -> float:
             """
             The `eval` function calculates a value based on the given parameters and returns it.
-            
+
             :param i: The parameter `i` represents the index of the first dimension of the arrays `Fx` and `F0`.
             It is used to access specific elements of these arrays
             :param j: The parameter `j` represents the index of the column in the matrix `self.Fx` that is being
@@ -80,7 +80,7 @@ class QMIOracle:
         def neg_grad_sym_quad(self, Q, x: Arr):
             """
             The function `neg_grad_sym_quad` calculates the negative gradient of a symmetric quadratic function.
-            
+
             :param Q: Q is a quadratic matrix represented as a sparse matrix. It has two attributes: p and v. p
             is a tuple representing the starting and ending indices of the non-zero elements in the matrix, and
             v is a numpy array representing the values of the non-zero elements
@@ -88,7 +88,7 @@ class QMIOracle:
             :type x: Arr
             :return: the gradient vector `g`.
             """
-            s, n = Q.p
+            s, n = Q.pos
             v = Q.v[s:n]
             Av = v @ self.Fx[s:n]
             g = np.array([-2 * ((v @ Fk[s:n]) @ Av) for Fk in self.F])
@@ -98,7 +98,7 @@ class QMIOracle:
         """
         The function initializes an object with attributes qmi, gmi, and Q based on the input arguments F
         and F0.
-        
+
         :param F: A list of arrays. Each array represents a feature matrix for a different class. The
         feature matrix has shape (n, m), where n is the number of samples and m is the number of features
         :param F0: F0 is a 2-dimensional array representing the reference distribution. It has n rows and m
@@ -112,7 +112,7 @@ class QMIOracle:
     def update(self, t: float):
         """
         The function updates the best-so-far optimal value.
-        
+
         :param t: The parameter `t` represents the best-so-far optimal value
         :type t: float
         """
@@ -122,7 +122,7 @@ class QMIOracle:
         """
         The `assess_feas` function assesses the feasibility of a given input and returns a cut if it is
         feasible.
-        
+
         :param x: An array of values
         :type x: Arr
         :return: an Optional[Cut] object.
