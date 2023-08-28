@@ -29,7 +29,7 @@ class GMIOracle:
         """
         self.H = H
         self.m = m
-        self.Q = LDLTMgr(m)
+        self.ldlt_mgr = LDLTMgr(m)
 
     def update(self, t):
         """
@@ -64,8 +64,8 @@ class GMIOracle:
             """
             return self.H.eval(i, j, x)
 
-        if self.Q.factor(get_elem):
+        if self.ldlt_mgr.factor(get_elem):
             return None
-        ep = self.Q.witness()
-        g = self.H.neg_grad_sym_quad(self.Q, x)
+        ep = self.ldlt_mgr.witness()
+        g = self.H.neg_grad_sym_quad(self.ldlt_mgr, x)
         return g, ep

@@ -73,10 +73,10 @@ class lsq_oracle:
         if cut := self.qmi.assess_feas(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
-            self.qmi.Q.witness()
-            # n = self.qmi.Q.pos[-1] + 1
-            s, n = self.qmi.Q.pos
-            v = self.qmi.Q.v[s:n]
+            self.qmi.ldlt_mgr.witness()
+            # n = self.qmi.ldlt_mgr.pos[-1] + 1
+            s, n = self.qmi.ldlt_mgr.pos
+            v = self.qmi.ldlt_mgr.v[s:n]
             g[-1] = -(v @ v)
             return (g, fj), None
 

@@ -107,7 +107,7 @@ class QMIOracle:
         n, m = F0.shape
         self.qmi = self.QMI(F, F0)
         self.gmi = GMIOracle(self.qmi, m)
-        self.Q = self.gmi.Q
+        self.ldlt_mgr = self.gmi.ldlt_mgr
 
     def update(self, t: float):
         """

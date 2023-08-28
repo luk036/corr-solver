@@ -58,7 +58,7 @@ class mle_oracle:
         if cut := self.lmi0.assess_feas(x):
             return cut, None
 
-        R = self.lmi0.Q.sqrt()
+        R = self.lmi0.ldlt_mgr.sqrt()
         invR = np.linalg.inv(R)
         S = invR @ invR.T
         SY = S @ self.Y
