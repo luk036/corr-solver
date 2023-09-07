@@ -13,7 +13,7 @@ Cut = Tuple[Arr, float]
 # The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
 # certain objective function subject to linear matrix inequality constraints.
 class mle_oracle:
-    def __init__(self, Sig: Arr, Y: Arr):
+    def __init__(self, Sigma: Arr, Y: Arr):
         """Maximum likelyhood estimation:
 
             min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
@@ -22,20 +22,20 @@ class mle_oracle:
         The function initializes an object with given covariance matrix and biased covariance matrix,
         and creates LMI oracles for optimization.
 
-        :param Sig: The parameter "Sig" represents the covariance matrix, which is a square matrix that
+        :param Sigma: The parameter "Sigma" represents the covariance matrix, which is a square matrix that
         describes the variances and covariances of a set of random variables. It is used in the maximum
         likelihood estimation algorithm to estimate the parameters of a statistical model
-        :type Sig: Arr
+        :type Sigma: Arr
         :param Y: The parameter Y represents a biased covariance matrix. It is used in the maximum
         likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
         than or equal to Ω(p)
         :type Y: Arr
         """
         self.Y = Y
-        self.Sig = Sig
-        self.lmi0 = LMI0Oracle(Sig)
-        self.lmi = LMIOracle(Sig, 2 * Y)
-        # self.lmi2 = LMI2Oracle(Sig, 2*Y)
+        self.Sigma = Sigma
+        self.lmi0 = LMI0Oracle(Sigma)
+        self.lmi = LMIOracle(Sigma, 2 * Y)
+        # self.lmi2 = LMI2Oracle(Sigma, 2*Y)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """
@@ -69,8 +69,8 @@ class mle_oracle:
         m = len(self.Y)
         g = np.zeros(n)
         for i in range(n):
-            SFsi = S @ self.Sig[i]
-            # g[i] = sum(S[k] @ self.Sig[k] for k in range(m))
+            SFsi = S @ self.Sigma[i]
+            # g[i] = sum(S[k] @ self.Sigma[k] for k in range(m))
             g[i] = np.trace(SFsi)
             g[i] -= sum(SFsi[k, :] @ SY[:, k] for k in range(m))
 

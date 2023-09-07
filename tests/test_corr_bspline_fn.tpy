@@ -10,8 +10,8 @@ from corr_solver.corr_bspline_oracle import corr_bspline
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
 
-s = create_2d_sites(5, 4)
-Y = create_2d_isotropic(s, 3000)
+site = create_2d_sites(5, 4)
+Y = create_2d_isotropic(site, 3000)
 
 
 def lsq_corr_core2(Y, n, omega):
@@ -60,51 +60,51 @@ def mle_corr_core(Y, n, omega):
     return xbest, num_iters, xbest is not None
 
 
-def mle_corr_bspline(Y, s, n):
+def mle_corr_bspline(Y, site, n):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
-        s ([type]): [description]
+        site ([type]): [description]
         n ([type]): [description]
 
     Returns:
         [type]: [description]
     """
     _ = np.linalg.cholesky(Y)  # test if Y is SPD.
-    return corr_bspline(Y, s, n, mle_oracle, mle_corr_core)
+    return corr_bspline(Y, site, n, mle_oracle, mle_corr_core)
 
 
-def lsq_corr_bspline2(Y, s, n):
+def lsq_corr_bspline2(Y, site, n):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
-        s ([type]): [description]
+        site ([type]): [description]
         n ([type]): [description]
 
     Returns:
         [type]: [description]
     """
-    return corr_bspline(Y, s, n, lsq_oracle, lsq_corr_core2)
+    return corr_bspline(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
 def test_data():
     """[summary]
     """
     # assert Y[2,3] == approx(1.9365965488224368)
-    assert s[6, 0] == approx(3.75)
-    # D1 = construct_distance_matrix(s)
+    assert site[6, 0] == approx(3.75)
+    # D1 = construct_distance_matrix(site)
     # assert D1[2, 4] == approx(5.0)
 
 
 def test_lsq_corr_bspline2():
-    _, num_iters, feasible = lsq_corr_bspline2(Y, s, 4)
+    _, num_iters, feasible = lsq_corr_bspline2(Y, site, 4)
     assert feasible
     assert num_iters <= 480
 
 
 def test_mle_corr_bspline():
-    _, num_iters, feasible = mle_corr_bspline(Y, s, 4)
+    _, num_iters, feasible = mle_corr_bspline(Y, site, 4)
     assert feasible
     assert num_iters <= 178

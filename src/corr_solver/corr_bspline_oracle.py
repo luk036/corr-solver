@@ -75,43 +75,41 @@ class mono_decreasing_oracle2:
         return self.basis.assess_optim(x, t)
 
 
-def corr_bspline(Y, s, m, oracle, corr_core):
+def corr_bspline(Y, site, m, oracle, corr_core):
     """
-    The `corr_bspline` function takes in input parameters `Y`, `s`, `m`, `oracle`, and `corr_core`, and
+    The `corr_bspline` function takes in input parameters `Y`, `site`, `m`, `oracle`, and `corr_core`, and
     returns a BSpline object, the number of iterations, and a feasibility indicator.
 
     :param Y: The input data Y for the B-spline algorithm
-    :param s: The parameter `s` represents the number of control points in the B-spline curve. It
+    :param site: The parameter `site` represents the number of control points in the B-spline curve. It
     determines the flexibility and smoothness of the curve
     :param m: The parameter `m` represents the number of control points in the B-spline curve. It
     determines the flexibility and smoothness of the curve. A higher value of `m` will result in a more
     flexible curve that can better fit the data, but it may also lead to overfitting
-    :param oracle: The `oracle` parameter is a function that takes in the signal `Sig` and the observed
-    data `Y` and returns the predicted values `Pb`. It is used to generate the predicted values for the
-    given signal and observed data
+    :param oracle: The `oracle` parameter is a separation oracle
     :param corr_core: The `corr_core` parameter is a function that takes in the following arguments:
     :return: The function `corr_bspline` returns three values:
     """
-    Sig, t, k = generate_bspline_info(s, m)
-    Pb = oracle(Sig, Y)
+    Sigma, t, k = generate_bspline_info(site, m)
+    Pb = oracle(Sigma, Y)
     omega = mono_decreasing_oracle2(Pb)
     c, num_iters, feasible = corr_core(Y, m, omega)
     return BSpline(t, c, k), num_iters, feasible
 
 
-def generate_bspline_info(s, m):
+def generate_bspline_info(site, m):
     """
     The function `generate_bspline_info` generates B-spline information given a set of points and a
     desired number of B-splines.
 
-    :param s: The parameter `s` is a list or array of data points that define the shape or curve that
+    :param site: The parameter `site` is a list or array of data points that define the shape or curve that
     you want to approximate using B-splines
     :param m: The parameter `m` represents the number of B-spline basis functions to generate. It
     determines the number of basis functions that will be used to approximate the input data
-    :return: The function `generate_bspline_info` returns three values: `Sig`, `t`, and `k`.
+    :return: The function `generate_bspline_info` returns three values: `Sigma`, `t`, and `k`.
     """
     k = 2  # quadratic bspline
-    h = s[-1] - s[0]
+    h = site[-1] - site[0]
     d = np.sqrt(h @ h)
     t = np.linspace(0, d * 1.2, m + k + 1)
     spls = []
@@ -119,8 +117,8 @@ def generate_bspline_info(s, m):
         coeff = np.zeros(m)
         coeff[i] = 1
         spls += [BSpline(t, coeff, k)]
-    D = construct_distance_matrix(s)
-    Sig = []
+    D = construct_distance_matrix(site)
+    Sigma = []
     for i in range(m):
-        Sig += [spls[i](D)]
-    return Sig, t, k
+        Sigma += [spls[i](D)]
+    return Sigma, t, k

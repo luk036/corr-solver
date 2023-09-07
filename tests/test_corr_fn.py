@@ -9,8 +9,8 @@ from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.qmi_oracle import QMIOracle
 
-s = create_2d_sites(5, 4)
-Y = create_2d_isotropic(s, 3000)
+site = create_2d_sites(5, 4)
+Y = create_2d_isotropic(site, 3000)
 
 
 def lsq_corr_core2(Y, n, omega):
@@ -36,18 +36,18 @@ def lsq_corr_core2(Y, n, omega):
     return xbest[:-1], num_iters, xbest is not None
 
 
-def lsq_corr_poly2(Y, s, n):
+def lsq_corr_poly2(Y, site, n):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
-        s ([type]): [description]
+        site ([type]): [description]
         n ([type]): [description]
 
     Returns:
         [type]: [description]
     """
-    return corr_poly(Y, s, n, lsq_oracle, lsq_corr_core2)
+    return corr_poly(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
 def lsq_corr_core(Y, n, Q):
@@ -61,18 +61,18 @@ def lsq_corr_core(Y, n, Q):
     return omega.x_best, num_iters, t != upper
 
 
-def lsq_corr_poly(Y, s, n):
+def lsq_corr_poly(Y, site, n):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
-        s ([type]): [description]
+        site ([type]): [description]
         n ([type]): [description]
 
     Returns:
         [type]: [description]
     """
-    return corr_poly(Y, s, n, QMIOracle, lsq_corr_core)
+    return corr_poly(Y, site, n, QMIOracle, lsq_corr_core)
 
 
 def mle_corr_core(Y, n, omega):
@@ -98,42 +98,42 @@ def mle_corr_core(Y, n, omega):
     return xbest, num_iters, xbest is not None
 
 
-def mle_corr_poly(Y, s, n):
+def mle_corr_poly(Y, site, n):
     """[summary]
 
     Arguments:
         Y ([type]): [description]
-        s ([type]): [description]
+        site ([type]): [description]
         n ([type]): [description]
 
     Returns:
         [type]: [description]
     """
     _ = np.linalg.cholesky(Y)  # test if Y is SPD.
-    return corr_poly(Y, s, n, mle_oracle, mle_corr_core)
+    return corr_poly(Y, site, n, mle_oracle, mle_corr_core)
 
 
 def test_data():
     """[summary]"""
     # assert Y[2,3] == approx(1.9365965488224368)
-    assert s[6, 0] == approx(8.75)
-    # D1 = construct_distance_matrix(s)
+    assert site[6, 0] == approx(8.75)
+    # D1 = construct_distance_matrix(site)
     # assert D1[2, 4] == approx(5.0)
 
 
 def test_lsq_corr_poly():
-    _, num_iters, feasible = lsq_corr_poly(Y, s, 4)
+    _, num_iters, feasible = lsq_corr_poly(Y, site, 4)
     assert feasible
     assert num_iters <= 38
 
 
 def test_lsq_corr_poly2():
-    _, num_iters, feasible = lsq_corr_poly2(Y, s, 4)
+    _, num_iters, feasible = lsq_corr_poly2(Y, site, 4)
     assert feasible
     assert num_iters <= 594
 
 
 def test_mle_corr_poly():
-    _, num_iters, feasible = mle_corr_poly(Y, s, 4)
+    _, num_iters, feasible = mle_corr_poly(Y, site, 4)
     assert feasible
     assert num_iters <= 255
