@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 import numpy as np
-from lds_py.lds import Halton
+from lds_gen.lds import Halton
 
 Arr = np.ndarray
 Cut = Tuple[Arr, float]
