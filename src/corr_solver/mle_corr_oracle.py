@@ -35,7 +35,6 @@ class mle_oracle:
         self.Sigma = Sigma
         self.lmi0 = LMI0Oracle(Sigma)
         self.lmi = LMIOracle(Sigma, 2 * Y)
-        # self.lmi2 = LMI2Oracle(Sigma, 2*Y)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """
@@ -70,11 +69,9 @@ class mle_oracle:
         g = np.zeros(n)
         for i in range(n):
             SFsi = S @ self.Sigma[i]
-            # g[i] = sum(S[k] @ self.Sigma[k] for k in range(m))
             g[i] = np.trace(SFsi)
             g[i] -= sum(SFsi[k, :] @ SY[:, k] for k in range(m))
 
-        f = f1 - t
         if (f := f1 - t) >= 0:
             return (g, f), None
         return (g, 0.0), f1

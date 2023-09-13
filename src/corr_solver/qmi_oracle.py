@@ -8,8 +8,6 @@ from .gmi_oracle import GMIOracle
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
 
-# import cholutil
-
 
 class QMIOracle:
     class QMI:
@@ -53,31 +51,29 @@ class QMIOracle:
             """
             self.t = t
 
-        def eval(self, i, j, x: Arr) -> float:
+        def eval(self, row, col, x: Arr) -> float:
             """
             The `eval` function calculates a value based on the given parameters and returns it.
 
-            :param i: The parameter `i` represents the index of the first dimension of the arrays `Fx` and `F0`.
-            It is used to access specific elements of these arrays
-            :param j: The parameter `j` represents the index of the column in the matrix `self.Fx` that is being
-            evaluated
-            :param x: The parameter `x` is an array of values
+            :param row: The parameter `row` represents the row index of the element in the matrix
+            :param col: The parameter `col` represents the column index of the element in the matrix
+            :param x: The parameter `x` is an array
             :type x: Arr
-            :return: a float value. If `i` is equal to `j`, it returns `self.t + a`, otherwise it returns `a`.
+            :return: a float value.
             """
-            if i < j:
+            if row < col:
                 raise AssertionError()
-            if self.count < i + 1:
+            if self.count < row + 1:
                 nx = len(x)
-                self.count = i + 1
-                self.Fx[i] = self.F0[:, i]
-                self.Fx[i] -= sum(self.F[k][:, i] * x[k] for k in range(nx))
-            a = -(self.Fx[i] @ self.Fx[j])
-            if i == j:
+                self.count = row + 1
+                self.Fx[row] = self.F0[:, row]
+                self.Fx[row] -= sum(self.F[k][:, row] * x[k] for k in range(nx))
+            a = -(self.Fx[row] @ self.Fx[col])
+            if row == col:
                 return self.t + a
             return a
 
-        def neg_grad_sym_quad(self, Q, x: Arr):
+        def neg_grad_sym_quad(self, Q, _: Arr):
             """
             The function `neg_grad_sym_quad` calculates the negative gradient of a symmetric quadratic function.
 
@@ -104,7 +100,7 @@ class QMIOracle:
         :param F0: F0 is a 2-dimensional array representing the reference distribution. It has n rows and m
         columns
         """
-        n, m = F0.shape
+        _, m = F0.shape
         self.qmi = self.QMI(F, F0)
         self.gmi = GMIOracle(self.qmi, m)
         self.ldlt_mgr = self.gmi.ldlt_mgr

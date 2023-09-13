@@ -45,11 +45,11 @@ def create_2d_isotropic(site: Arr, N=3000) -> Arr:
     np.random.seed(5)
 
     Sigma = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i, n):
-            d = np.array(site[j]) - np.array(site[i])
-            Sigma[i, j] = np.exp(-sdkern * (d.dot(d)))
-            Sigma[j, i] = Sigma[i, j]
+    for row in range(n):
+        for col in range(row, n):
+            d = np.array(site[col]) - np.array(site[row])
+            Sigma[row, col] = np.exp(-sdkern * (d.dot(d)))
+            Sigma[col, row] = Sigma[row, col]
 
     A = np.linalg.cholesky(Sigma)
     Y = np.zeros((n, n))
@@ -75,12 +75,12 @@ def construct_distance_matrix(site: Arr) -> Arr:
     """
     n = len(site)
     D1 = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i + 1, n):
-            h = site[j] - site[i]
+    for row in range(n):
+        for col in range(row + 1, n):
+            h = site[col] - site[row]
             d = np.sqrt(h @ h)
-            D1[i, j] = d
-            D1[j, i] = d
+            D1[row, col] = d
+            D1[col, row] = d
     return D1
 
 

@@ -6,7 +6,6 @@ from ellalgo.oracles.ldlt_mgr import LDLTMgr
 
 Cut = Tuple[np.ndarray, float]
 
-
 # The `GMIOracle` class is an oracle for a General Matrix Inequality constraint, which evaluates the
 # function and its negative gradient.
 class GMIOracle:
@@ -14,9 +13,8 @@ class GMIOracle:
 
             H(x) >= 0
 
-    H.eval(i, j, x): function evalution at (i,j)-element
-    H.neggrad[k](p, x): negative gradient in range p, the k-term
-
+    H.eval(row, col, x): function evalution at (row, col)-element
+    H.neggrad[k](rng, x): negative gradient in range rng, the k-term
     """
 
     def __init__(self, H, m):
@@ -50,19 +48,17 @@ class GMIOracle:
         :return: The function `assess_feas` returns an optional `Cut` object.
         """
 
-        def get_elem(i, j):
+        def get_elem(row, col):
             """
             The function `get_elem` returns the evaluation of the function `H` at the given indices `i` and `j`,
             with the input `x`.
 
-            :param i: The parameter "i" is likely an index or a value used to access an element in a data
-            structure or array. It could represent a row index, an index in a list, or any other type of index
-            used to access elements in a data structure
-            :param j: The parameter "j" is likely representing the column index of the element in the matrix
+            :param i: The parameter "i" represents the row index of the element in the matrix
+            :param j: The parameter "j" represents the column index of the element in the matrix
             :return: The function `get_elem` is returning the result of calling the `eval` method on the `H`
-            object with the arguments `i`, `j`, and `x`.
+            object with the arguments `row`, `col`, and `x`.
             """
-            return self.H.eval(i, j, x)
+            return self.H.eval(row, col, x)
 
         if self.ldlt_mgr.factor(get_elem):
             return None
