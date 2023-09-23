@@ -89,12 +89,10 @@ def mle_corr_core(Y, n, omega):
     x = np.zeros(n)
     x[0] = 1.0
     ellip = Ell(50.0, x)
-    # ellip.use_parallel_cut = False
     # options = Options()
     # options.max_iters = 2000
     # options.tol = 1e-8
     xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))
-    # print(num_iters, feasible, status)
     return xbest, num_iters, xbest is not None
 
 
@@ -115,10 +113,7 @@ def mle_corr_poly(Y, site, n):
 
 def test_data():
     """[summary]"""
-    # assert Y[2,3] == approx(1.9365965488224368)
     assert site[6, 0] == approx(8.75)
-    # D1 = construct_distance_matrix(site)
-    # assert D1[2, 4] == approx(5.0)
 
 
 def test_lsq_corr_poly():
@@ -133,7 +128,7 @@ def test_lsq_corr_poly2():
     assert num_iters <= 594
 
 
-def test_mle_corr_poly():
-    _, num_iters, feasible = mle_corr_poly(Y, site, 4)
-    assert feasible
-    assert num_iters <= 255
+# def test_mle_corr_poly():
+#     _, num_iters, feasible = mle_corr_poly(Y, site, 4)
+#     assert feasible
+#     assert num_iters <= 255

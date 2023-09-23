@@ -17,10 +17,10 @@ def create_2d_sites(nx=10, ny=8) -> Arr:
     (optional)
     :return: The function `create_2d_sites` returns a 2D array representing the location of sites.
     """
-    n = nx * ny
+    num_grid = nx * ny
     s_end = np.array([10.0, 8.0])
     hgen = Halton([2, 3])
-    site = s_end * np.array([hgen.pop() for _ in range(n)])
+    site = s_end * np.array([hgen.pop() for _ in range(num_grid)])
     return site
 
 

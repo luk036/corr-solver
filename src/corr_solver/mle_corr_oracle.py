@@ -26,7 +26,7 @@ class mle_oracle:
         describes the variances and covariances of a set of random variables. It is used in the maximum
         likelihood estimation algorithm to estimate the parameters of a statistical model
         :type Sigma: Arr
-        :param Y: The parameter Y represents a biased covariance matrix. It is used in the maximum
+        :param Y: The parameter Y represents a biased sample covariance matrix. It is used in the maximum
         likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
         than or equal to Ω(p)
         :type Y: Arr
