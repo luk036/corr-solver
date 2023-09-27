@@ -9,7 +9,7 @@
 
 Correlation Solver Python Code
 
-## Features
+## ✨ Features
 
 - No square-root per evaluation.
 - Suport lazy evaluation.

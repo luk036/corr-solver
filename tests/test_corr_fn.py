@@ -75,7 +75,7 @@ def lsq_corr_poly(Y, site, n):
     return corr_poly(Y, site, n, QMIOracle, lsq_corr_core)
 
 
-def mle_corr_core(Y, n, omega):
+def mle_corr_core(_, n, omega):
     """[summary]
 
     Arguments:
