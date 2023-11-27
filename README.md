@@ -9,15 +9,20 @@
 
 Correlation Solver Python Code
 
+## Dependencies
+
+- [luk036/lds-gen](https://github.com/luk036/lds-gen)
+- [luk036/ellalgo](https://github.com/luk036/ellalgo)
+- numpy
+- scipy
+
 ## ✨ Features
 
-- No square-root per evaluation.
-- Suport lazy evaluation.
-- Pure Python code.
+- Explore convexity
 
 ## Installation
 
-- The core corr-solver depends on the `lmi-solver` and `ellalgo` modules.
+- The core corr-solver depends on the `lds-gen` and `ellalgo` modules.
 
 ## See also
 
