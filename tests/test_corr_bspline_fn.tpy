@@ -25,15 +25,15 @@ def lsq_corr_core2(Y, n, omega):
     Returns:
         [type]: [description]
     """
-    normY = np.linalg.norm(Y, 'fro')
+    normY = np.linalg.norm(Y, "fro")
     normY2 = 32 * normY * normY
     val = 256 * np.ones(n + 1)
     val[-1] = normY2 * normY2
     x = np.zeros(n + 1)  # cannot all zeros
-    x[0] = 1.
+    x[0] = 1.0
     x[-1] = normY2 / 2
     ellip = Ell(val, x)
-    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float('inf'))
+    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))
     return xbest[:-1], num_iters, xbest is not None
 
 
@@ -49,13 +49,13 @@ def mle_corr_core(Y, n, omega):
         [type]: [description]
     """
     x = np.zeros(n)
-    x[0] = 1.
-    ellip = Ell(50., x)
+    x[0] = 1.0
+    ellip = Ell(50.0, x)
     # ellip.use_parallel_cut = False
     # options = Options()
     # options.max_iters = 2000
     # options.tol = 1e-8
-    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float('inf'))
+    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))
     # print(num_iters, feasible, status)
     return xbest, num_iters, xbest is not None
 
@@ -89,13 +89,13 @@ def lsq_corr_bspline2(Y, site, n):
     return corr_bspline(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
-def test_data():
-    """[summary]
-    """
-    # assert Y[2,3] == approx(1.9365965488224368)
-    assert site[6, 0] == approx(3.75)
-    # D1 = construct_distance_matrix(site)
-    # assert D1[2, 4] == approx(5.0)
+# def test_data():
+#     """[summary]
+#     """
+#     # assert Y[2,3] == approx(1.9365965488224368)
+#     assert site[6, 0] == approx(3.75)
+#     # D1 = construct_distance_matrix(site)
+#     # assert D1[2, 4] == approx(5.0)
 
 
 def test_lsq_corr_bspline2():
