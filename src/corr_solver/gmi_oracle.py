@@ -29,14 +29,14 @@ class GMIOracle:
         self.m = m
         self.ldlt_mgr = LDLTMgr(m)
 
-    def update(self, t):
-        """
-        The function "update" updates the value of "self.H" with the value of "t".
-
-        :param t: The parameter "t" in the "update" method is a variable that represents the time or the
-        value that needs to be updated
-        """
-        self.H.update(t)
+    # def update(self, t):
+    #     """
+    #     The function "update" updates the value of "self.H" with the value of "t".
+    #
+    #     :param t: The parameter "t" in the "update" method is a variable that represents the time or the
+    #     value that needs to be updated
+    #     """
+    #     self.H.update(t)
 
     def assess_feas(self, x: np.ndarray) -> Optional[Cut]:
         """

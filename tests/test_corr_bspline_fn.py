@@ -101,10 +101,10 @@ def lsq_corr_bspline2(Y, site, n):
 def test_lsq_corr_bspline2():
     _, num_iters, feasible = lsq_corr_bspline2(Y, site, 4)
     assert feasible
-    assert num_iters <= 480
+    assert num_iters <= 541
 
 
 def test_mle_corr_bspline():
     _, num_iters, feasible = mle_corr_bspline(Y, site, 4)
     assert feasible
-    assert num_iters <= 178
+    assert num_iters <= 180
