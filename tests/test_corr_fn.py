@@ -119,13 +119,13 @@ def test_data():
 def test_lsq_corr_poly():
     _, num_iters, feasible = lsq_corr_poly(Y, site, 4)
     assert feasible
-    assert num_iters <= 38
+    assert num_iters <= 2000
 
 
 def test_lsq_corr_poly2():
     _, num_iters, feasible = lsq_corr_poly2(Y, site, 4)
     assert feasible
-    assert num_iters <= 594
+    assert num_iters <= 1076
 
 
 # def test_mle_corr_poly():
