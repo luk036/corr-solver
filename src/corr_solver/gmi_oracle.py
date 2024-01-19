@@ -6,6 +6,7 @@ from ellalgo.oracles.ldlt_mgr import LDLTMgr
 
 Cut = Tuple[np.ndarray, float]
 
+
 # The `GMIOracle` class is an oracle for a General Matrix Inequality constraint, which evaluates the
 # function and its negative gradient.
 class GMIOracle:

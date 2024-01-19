@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from ellalgo.cutting_plane import bsearch, BSearchAdaptor, cutting_plane_optim
+from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
 from ellalgo.ell import Ell
 from pytest import approx
 

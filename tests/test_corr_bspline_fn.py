@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-from pytest import approx
-
 import numpy as np
-
-from ellalgo.cutting_plane import bsearch, BSearchAdaptor, cutting_plane_optim
+from ellalgo.cutting_plane import cutting_plane_optim
 from ellalgo.ell import Ell
-from corr_solver.corr_oracle import create_2d_isotropic, create_2d_sites
+
 from corr_solver.corr_bspline_oracle import corr_bspline
+from corr_solver.corr_oracle import create_2d_isotropic, create_2d_sites
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
+
+# from pytest import approx
+
 
 site = create_2d_sites(5, 4)
 Y = create_2d_isotropic(site, 3000)
