@@ -23,7 +23,7 @@ class GMIOracle:
         The function initializes an object with attributes H, m, and Q.
 
         :param H: The parameter `H` is a variable that represents a matrix. It is not clear what the matrix
-        represents or how it is used in the code
+            represents or how it is used in the code
         :param m: The parameter `m` represents the dimension of the matrix. It is an integer value
         """
         self.H = H
@@ -57,7 +57,7 @@ class GMIOracle:
             :param i: The parameter "i" represents the row index of the element in the matrix
             :param j: The parameter "j" represents the column index of the element in the matrix
             :return: The function `get_elem` is returning the result of calling the `eval` method on the `H`
-            object with the arguments `row`, `col`, and `x`.
+                object with the arguments `row`, `col`, and `x`.
             """
             return self.H.eval(row, col, x)
 

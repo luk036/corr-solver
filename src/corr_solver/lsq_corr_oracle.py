@@ -22,11 +22,10 @@ class lsq_oracle:
 
         min   t
         s.t.  x[n+1] ≤ t
-              x[n+1]*I − F(x)' F(x) ⪰ 0
+              x[n+1]*I − F(x)^T F(x) ⪰ 0
 
     where
         F(x) = F[1] x[1] + ··· + F[n] x[n]
-
         {Fk}i,j = Ψk(‖sj − si‖)
 
     Returns:
@@ -51,14 +50,14 @@ class lsq_oracle:
         containing a cut and an optional float value.
 
         :param x: The parameter `x` is of type `Arr`, which is likely a numpy array or a list of numbers. It
-        represents some input values for the optimization problem
+            represents some input values for the optimization problem
         :type x: Arr
         :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
-        used in the assessment of the optimization problem
+            used in the assessment of the optimization problem
         :type t: float
         :return: The function `assess_optim` returns a tuple containing two elements. The first element is a
-        tuple `(g, fj)` which represents a cut and its corresponding objective value. The second element is
-        an optional float value `tc` if `fj > 0.0`, otherwise it is `None`.
+            tuple `(g, fj)` which represents a cut and its corresponding objective value. The second element is
+            an optional float value `tc` if `fj > 0.0`, otherwise it is `None`.
         """
         n = len(x)
         g = np.zeros(n)

@@ -23,12 +23,12 @@ class mle_oracle:
         and creates LMI oracles for optimization.
 
         :param Sigma: The parameter "Sigma" represents the covariance matrix, which is a square matrix that
-        describes the variances and covariances of a set of random variables. It is used in the maximum
-        likelihood estimation algorithm to estimate the parameters of a statistical model
+            describes the variances and covariances of a set of random variables. It is used in the maximum
+            likelihood estimation algorithm to estimate the parameters of a statistical model
         :type Sigma: Arr
         :param Y: The parameter Y represents a biased sample covariance matrix. It is used in the maximum
-        likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
-        than or equal to Ω(p)
+            likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
+            than or equal to Ω(p)
         :type Y: Arr
         """
         self.Y = Y
@@ -42,14 +42,14 @@ class mle_oracle:
         calculating various values and returning a tuple of cuts and a float value.
 
         :param x: The parameter `x` is a numpy array representing the coefficients of basis functions. It is
-        used as input to assess the feasibility of a solution
+            used as input to assess the feasibility of a solution
         :type x: Arr
         :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
-        used in the calculation of the objective function `f`
+            used in the calculation of the objective function `f`
         :type t: float
         :return: The function `assess_optim` returns a tuple containing two elements. The first element is a
-        `Cut` object or a tuple `(g, f)` depending on the condition. The second element is either `None` or
-        a float value.
+            `Cut` object or a tuple `(g, f)` depending on the condition. The second element is either `None` or
+            a float value.
         """
         if cut := self.lmi.assess_feas(x):
             return cut, None

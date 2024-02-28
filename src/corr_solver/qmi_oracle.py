@@ -31,10 +31,10 @@ class QMIOracle:
             The function initializes the variables F, F0, and Fx with the given arguments.
 
             :param F: F is a list of arrays. Each array in the list represents a feature vector. The
-            feature vectors can have different lengths, but they all have the same number of columns
+                feature vectors can have different lengths, but they all have the same number of columns
             :type F: List[Arr]
             :param F0: F0 is a 2-dimensional array (matrix) representing the initial state of the
-            system. It has n rows and m columns
+                system. It has n rows and m columns
             :type F0: Arr
             """
             self.F = F
@@ -78,8 +78,8 @@ class QMIOracle:
             The function `neg_grad_sym_quad` calculates the negative gradient of a symmetric quadratic function.
 
             :param Q: Q is a quadratic matrix represented as a sparse matrix. It has two attributes: p and v. p
-            is a tuple representing the starting and ending indices of the non-zero elements in the matrix, and
-            v is a numpy array representing the values of the non-zero elements
+                is a tuple representing the starting and ending indices of the non-zero elements in the matrix, and
+                v is a numpy array representing the values of the non-zero elements
             :param x: The parameter `x` is an array
             :type x: Arr
             :return: the gradient vector `g`.
@@ -96,9 +96,9 @@ class QMIOracle:
         and F0.
 
         :param F: A list of arrays. Each array represents a feature matrix for a different class. The
-        feature matrix has shape (n, m), where n is the number of samples and m is the number of features
+            feature matrix has shape (n, m), where n is the number of samples and m is the number of features
         :param F0: F0 is a 2-dimensional array representing the reference distribution. It has n rows and m
-        columns
+            columns
         """
         _, m = F0.shape
         self.qmi = self.QMI(F, F0)

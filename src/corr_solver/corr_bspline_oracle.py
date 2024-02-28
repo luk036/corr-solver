@@ -16,11 +16,11 @@ def mono_oracle(x):
     decreasing constraint and returns the gradient and the first violation if it exists.
 
     :param x: The parameter `x` is a list or array of numbers. It represents a sequence of values that
-    we want to check for the monotonic decreasing constraint
+        we want to check for the monotonic decreasing constraint
     :return: The function `mono_oracle` returns two values: `g` and `fj`. `g` is a numpy array of zeros
-    with the same length as `x`, where elements are set to -1.0 and 1.0 to enforce the monotonic
-    decreasing constraint. `fj` is the difference between the next element and the current element in
-    `x`.
+        with the same length as `x`, where elements are set to -1.0 and 1.0 to enforce the monotonic
+        decreasing constraint. `fj` is the difference between the next element and the current element in
+        `x`.
     """
     # monotonic decreasing constraint
     n = len(x)
@@ -46,8 +46,8 @@ class mono_decreasing_oracle2:
         The function initializes an object with a given basis.
 
         :param basis: The `basis` parameter is a variable that is passed to the `__init__` method of a
-        class. It is used to initialize the `basis` attribute of the class instance. The `basis` attribute
-        can then be accessed and used throughout the class methods
+            class. It is used to initialize the `basis` attribute of the class instance. The `basis` attribute
+            can then be accessed and used throughout the class methods
         """
         self.basis = basis
 
@@ -59,10 +59,10 @@ class mono_decreasing_oracle2:
         :param x: An array of values
         :type x: Arr
         :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
-        used in the function to assess the optimality of a solution
+            used in the function to assess the optimality of a solution
         :type t: float
         :return: The function `assess_optim` returns a tuple containing a `Cut` object and an optional float
-        value.
+            value.
         """
         # monotonic decreasing constraint
         n = len(x)
@@ -82,10 +82,10 @@ def corr_bspline(Y, site, m, oracle, corr_core):
 
     :param Y: The input data Y for the B-spline algorithm
     :param site: The parameter `site` represents the number of control points in the B-spline curve. It
-    determines the flexibility and smoothness of the curve
+        determines the flexibility and smoothness of the curve
     :param m: The parameter `m` represents the number of control points in the B-spline curve. It
-    determines the flexibility and smoothness of the curve. A higher value of `m` will result in a more
-    flexible curve that can better fit the data, but it may also lead to overfitting
+        determines the flexibility and smoothness of the curve. A higher value of `m` will result in a more
+        flexible curve that can better fit the data, but it may also lead to overfitting
     :param oracle: The `oracle` parameter is a separation oracle
     :param corr_core: The `corr_core` parameter is a function that takes in the following arguments:
     :return: The function `corr_bspline` returns three values:
@@ -103,9 +103,9 @@ def generate_bspline_info(site, m):
     desired number of B-splines.
 
     :param site: The parameter `site` is a list or array of data points that define the shape or curve that
-    you want to approximate using B-splines
+        you want to approximate using B-splines
     :param m: The parameter `m` represents the number of B-spline basis functions to generate. It
-    determines the number of basis functions that will be used to approximate the input data
+        determines the number of basis functions that will be used to approximate the input data
     :return: The function `generate_bspline_info` returns three values: `Sigma`, `t`, and `k`.
     """
     k = 2  # quadratic bspline
