@@ -85,7 +85,7 @@ class QMIOracle:
             :return: the gradient vector `g`.
             """
             s, n = Q.pos
-            v = Q.v[s:n]
+            v = Q.wit[s:n]
             Av = v @ self.Fx[s:n]
             g = np.array([-2 * ((v @ Fk[s:n]) @ Av) for Fk in self.F])
             return g

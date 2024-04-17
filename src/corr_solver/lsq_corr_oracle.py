@@ -75,8 +75,8 @@ class lsq_oracle:
             self.qmi.ldlt_mgr.witness()
             # n = self.qmi.ldlt_mgr.pos[-1] + 1
             s, n = self.qmi.ldlt_mgr.pos
-            v = self.qmi.ldlt_mgr.v[s:n]
-            g[-1] = -(v @ v)
+            wit = self.qmi.ldlt_mgr.wit[s:n]
+            g[-1] = -(wit @ wit)
             return (g, fj), None
 
         g[-1] = 1
