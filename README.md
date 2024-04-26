@@ -20,11 +20,11 @@ Correlation Solver Python Code
 
 - Explore convexity
 
-## Installation
+## 🛠️ Installation
 
 - The core corr-solver depends on the `lds-gen` and `ellalgo` modules.
 
-## See also
+## 👀 See also
 
 - [corr-solver-cpp](https://github.com/luk036/corr-solver-cpp)
 - [Presentation Slides](https://luk036.github.io/cvx)
