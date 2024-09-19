@@ -9,24 +9,20 @@ from .qmi_oracle import QMIOracle
 Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
 
-
-# The `lsq_oracle` class is an Oracle for least-squares estimation that transforms the problem into a
-# constrained optimization problem.
+#    min   ‖ F0 − F(x) ‖
+#    s.t.  F(x) ⪰ 0
+#
+#    Transform the problem into:
+#
+#    min   t
+#    s.t.  x[n+1] ≤ t
+#          x[n+1]*I − F(x)^T F(x) ⪰ 0
+#
+#    where:
+#    1. F(x) = F[1] x[1] + ··· + F[n] x[n]
+#    2. {Fk}i,j = Ψk(‖sj − si‖)
 class lsq_oracle:
     """Oracle for least-squares estimation
-
-        min   ‖ F0 − F(x) ‖
-        s.t.  F(x) ⪰ 0
-
-    Transform the problem into:
-
-        min   t
-        s.t.  x[n+1] ≤ t
-              x[n+1]*I − F(x)^T F(x) ⪰ 0
-
-    where
-        F(x) = F[1] x[1] + ··· + F[n] x[n]
-        {Fk}i,j = Ψk(‖sj − si‖)
 
     Returns:
         [type]: [description]
