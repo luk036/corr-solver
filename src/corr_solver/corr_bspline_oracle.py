@@ -1,4 +1,36 @@
-# -*- coding: utf-8 -*-
+"""
+Corr_bspline_oracle.py
+
+This code is designed to work with B-splines, which are mathematical functions used to create smooth curves. The main purpose of this code is to generate a B-spline curve that fits a given set of data points while satisfying certain constraints, particularly a monotonic decreasing constraint.
+
+The code takes several inputs, including data points (Y), the number of control points for the B-spline (site and m), an oracle function for optimization, and a core correlation function (corr_core). These inputs are used to create and optimize the B-spline curve.
+
+The main output of this code is a B-spline object, which represents the fitted curve. It also returns the number of iterations taken to optimize the curve and a boolean indicating whether the optimization was successful (feasible).
+
+To achieve its purpose, the code uses several functions and a class:
+
+1. The mono_oracle function checks if a given sequence of numbers is monotonically decreasing (each number is less than or equal to the previous one). If it finds a violation, it returns information about where the violation occurred.
+
+2. The mono_decreasing_oracle2 class wraps the mono_oracle function and provides an interface for the optimization process.
+
+3. The corr_bspline function is the main function that ties everything together. It generates the B-spline information, sets up the optimization problem, and calls the core correlation function to optimize the B-spline coefficients.
+
+4. The generate_bspline_info function creates the necessary information for constructing a B-spline, including the knot vector (t) and the basis functions (Sigma).
+
+The code follows this general flow:
+
+1. Generate the B-spline information (knots, basis functions)
+2. Set up the optimization problem with constraints
+3. Optimize the B-spline coefficients
+4. Create and return the final B-spline object
+
+An important part of the logic is the monotonic decreasing constraint, which ensures that the resulting B-spline curve always decreases (or stays flat) as it moves from left to right. This is enforced through the mono_oracle and mono_decreasing_oracle2 functions.
+
+The code also performs some data transformations, such as converting the input site points into a distance matrix, and creating B-spline basis functions. These transformations help in setting up the optimization problem and constructing the final B-spline curve.
+
+Overall, this code provides a way to fit a smooth, monotonically decreasing curve to a set of data points, which can be useful in various applications such as data analysis, signal processing, or computer graphics.
+"""
+
 from typing import Optional, Tuple, Union
 
 import numpy as np

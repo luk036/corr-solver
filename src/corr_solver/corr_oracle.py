@@ -1,3 +1,42 @@
+"""
+Correlation Oracle (corr_oracle.py)
+
+This code is a collection of functions that work together to analyze and model relationships between data points in a two-dimensional space. It's designed to help understand patterns and correlations in data, particularly for spatial data analysis.
+
+The main purpose of this code is to create and manipulate data representing locations (called "sites") in a 2D space, generate correlation matrices based on these locations, and then fit a polynomial model to describe the relationships between these points.
+
+The code takes various inputs depending on the function being used. These inputs include the number of sites to generate, the locations of sites, and parameters for controlling the complexity of the models being created.
+
+The outputs produced by this code include:
+
+1. Arrays of site locations
+2. Correlation matrices
+3. Distance matrices
+4. Polynomial models that describe the relationships between data points
+
+The code achieves its purpose through several steps:
+
+1. It starts by creating a set of 2D sites using a special sequence called the Halton sequence. This helps distribute the points evenly across the space.
+
+2. Then, it generates a correlation matrix for these sites. This matrix represents how closely related each pair of sites is to each other based on their distances.
+
+3. The code also constructs distance matrices, which simply contain the distances between each pair of sites.
+
+4. Using these distance matrices, it builds more complex matrices that represent polynomial relationships between the sites.
+
+5. Finally, it uses all of this information to fit a polynomial model that best describes the relationships between the data points.
+
+Some important transformations happening in the code include:
+
+- Converting site locations into distance and correlation matrices
+- Using matrix operations to generate correlated random data
+- Building polynomial matrices of increasing degrees
+
+The code uses mathematical concepts like covariance matrices, Cholesky decomposition, and polynomial fitting. However, at its core, it's about taking spatial data, analyzing the relationships between points, and creating a model that can describe these relationships.
+
+This tool could be useful in fields like geography, environmental science, or any area where understanding spatial relationships is important. It provides a way to take raw location data and turn it into a mathematical model that can help predict or explain patterns in the data.
+"""
+
 from typing import List, Tuple
 
 import numpy as np
