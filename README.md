@@ -43,7 +43,6 @@ Overall, this code provides a way to solve a complex statistical optimization pr
 ## 👀 See also
 
 - [corr-solver-cpp](https://github.com/luk036/corr-solver-cpp)
-- [Presentation Slides](https://luk036.github.io/cvx)
 
 <!-- pyscaffold-notes -->
 
