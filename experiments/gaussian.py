@@ -55,7 +55,7 @@ def plot_gp(mu, cov, X, X_train=None, Y_train=None, samples=[]):
     plt.fill_between(X, mu + uncertainty, mu - uncertainty, alpha=0.1)
     plt.plot(X, mu, label="Mean")
     for i, sample in enumerate(samples):
-        plt.plot(X, sample, lw=1, ls="--", label=f"Sample {i+1}")
+        plt.plot(X, sample, lw=1, ls="--", label=f"Sample {i + 1}")
     # plot observations if available
     if X_train is not None:
         plt.plot(X_train, Y_train, "rx")

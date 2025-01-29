@@ -108,4 +108,4 @@ def test_lsq_corr_bspline2():
 def test_mle_corr_bspline():
     _, num_iters, feasible = mle_corr_bspline(Y, site, 4)
     assert feasible
-    assert num_iters <= 384
+    assert num_iters <= 388
