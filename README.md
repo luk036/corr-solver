@@ -27,7 +27,7 @@ Overall, this code provides a way to solve a complex statistical optimization pr
 
 ## Dependencies
 
-- [luk036/lds-gen](https://github.com/luk036/lds-gen)
+- [luk036/lds-gen](https://github.com/luk036/lds-gen) (>=3.10)
 - [luk036/ellalgo](https://github.com/luk036/ellalgo)
 - numpy
 - scipy
