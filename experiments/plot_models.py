@@ -23,7 +23,7 @@ def plot_2d_isotropic(site: Arr) -> None:
 
     for _ in range(4):
         x = var * np.random.randn(n)
-        y = A @ x + tau * np.random.randn(n)
+        A @ x + tau * np.random.randn(n)
 
 
 site = create_2d_sites(5, 4)
