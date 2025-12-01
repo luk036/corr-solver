@@ -111,24 +111,24 @@ def mle_corr_poly(Y, site, n):
     return corr_poly(Y, site, n, mle_oracle, mle_corr_core)
 
 
-def test_data():
+def test_data() -> None:
     """[summary]"""
     assert site[6, 0] == approx(8.75)
 
 
-def test_lsq_corr_poly():
+def test_lsq_corr_poly() -> None:
     _, num_iters, feasible = lsq_corr_poly(Y, site, 4)
     assert feasible
     assert num_iters <= 2000
 
 
-def test_lsq_corr_poly2():
+def test_lsq_corr_poly2() -> None:
     _, num_iters, feasible = lsq_corr_poly2(Y, site, 4)
     assert feasible
     assert num_iters <= 1095
 
 
-# def test_mle_corr_poly():
+# def test_mle_corr_poly() -> None:
 #     _, num_iters, feasible = mle_corr_poly(Y, site, 4)
 #     assert feasible
 #     assert num_iters <= 255

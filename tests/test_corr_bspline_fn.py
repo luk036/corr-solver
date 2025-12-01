@@ -90,7 +90,7 @@ def lsq_corr_bspline2(Y, site, n):
     return corr_bspline(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
-# def test_data():
+# def test_data() -> None:
 #     """[summary]
 #     """
 #     # assert Y[2,3] == approx(1.9365965488224368)
@@ -99,13 +99,13 @@ def lsq_corr_bspline2(Y, site, n):
 #     # assert D1[2, 4] == approx(5.0)
 
 
-def test_lsq_corr_bspline2():
+def test_lsq_corr_bspline2() -> None:
     _, num_iters, feasible = lsq_corr_bspline2(Y, site, 4)
     assert feasible
     assert num_iters <= 1054
 
 
-def test_mle_corr_bspline():
+def test_mle_corr_bspline() -> None:
     _, num_iters, feasible = mle_corr_bspline(Y, site, 4)
     assert feasible
     assert num_iters <= 388
