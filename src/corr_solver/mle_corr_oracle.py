@@ -18,20 +18,19 @@ The important logic flows in this code include the feasibility checks, the calcu
 Overall, this code provides a way to solve a complex statistical optimization problem by iteratively improving a solution while ensuring it satisfies certain constraints. It's a building block that would typically be used as part of a larger optimization algorithm.
 """
 
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import numpy as np
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 from ellalgo.oracles.lmi_oracle import LMIOracle
 
-Arr = Union[np.ndarray]
-Cut = Tuple[Arr, float]
+Cut = Tuple[np.ndarray, float]
 
 
 # The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
 # certain objective function subject to linear matrix inequality constraints.
 class mle_oracle:
-    def __init__(self, Sigma: Arr, Y: Arr):
+    def __init__(self, Sigma: List[np.ndarray], Y: np.ndarray):
         """Maximum likelyhood estimation:
 
             min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
@@ -43,18 +42,18 @@ class mle_oracle:
         :param Sigma: The parameter "Sigma" represents the covariance matrix, which is a square matrix that
             describes the variances and covariances of a set of random variables. It is used in the maximum
             likelihood estimation algorithm to estimate the parameters of a statistical model
-        :type Sigma: Arr
+        :type Sigma: List[np.ndarray]
         :param Y: The parameter Y represents a biased sample covariance matrix. It is used in the maximum
             likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
             than or equal to Ω(p)
-        :type Y: Arr
+        :type Y: np.ndarray
         """
         self.Y = Y
         self.Sigma = Sigma
         self.lmi0 = LMI0Oracle(Sigma)
         self.lmi = LMIOracle(Sigma, 2 * Y)
 
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
+    def assess_optim(self, x: np.ndarray, t: float) -> Tuple[Cut, Optional[float]]:
         """
         The `assess_optim` function assesses the feasibility and optimality of a given solution by
         calculating various values and returning a tuple of cuts and a float value.

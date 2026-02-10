@@ -34,9 +34,7 @@ plt.show()
 # Returns:
 #     (m x n) matrix.
 def ise_kernel(X1, X2, length=1.0, sigma_f=1.0):
-    sq_dist = (
-        np.sum(X1**2, 1).reshape(-1, 1) + np.sum(X2**2, 1) - 2 * np.dot(X1, X2.T)
-    )
+    sq_dist = np.sum(X1**2, 1).reshape(-1, 1) + np.sum(X2**2, 1) - 2 * np.dot(X1, X2.T)
     return sigma_f**2 * np.exp(-0.5 / length**2 * sq_dist)
 
 
