@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from typing import Optional
 
 import numpy as np
 from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
 from ellalgo.ell import Ell
-from ellalgo.ell_typing import OracleFeas2, OracleOptim, SearchSpace2
+from ellalgo.ell_typing import OracleFeas2, OracleOptim
 from pytest import approx
 
 from corr_solver.corr_oracle import corr_poly, create_2d_isotropic, create_2d_sites

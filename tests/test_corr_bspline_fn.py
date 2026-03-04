@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing import Optional
 
 import numpy as np
 from ellalgo.cutting_plane import cutting_plane_optim
