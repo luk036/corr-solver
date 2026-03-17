@@ -23,7 +23,7 @@ class QMIOracle:
           F(x) = F0 - (F1 * x1 + F2 * x2 + ...)
         """
 
-        t = None
+        t = 0.0
         count = 0
 
         def __init__(self, F: List[Arr], F0: Arr):
@@ -68,7 +68,7 @@ class QMIOracle:
                 self.count = row + 1
                 self.Fx[row] = self.F0[:, row]
                 self.Fx[row] -= sum(self.F[k][:, row] * x[k] for k in range(nx))
-            a = -(self.Fx[row] @ self.Fx[col])
+            a = float(-(self.Fx[row] @ self.Fx[col]))
             if row == col:
                 return self.t + a
             return a
@@ -80,8 +80,8 @@ class QMIOracle:
             :param Q: Q is a quadratic matrix represented as a sparse matrix. It has two attributes: p and v. p
                 is a tuple representing the starting and ending indices of the non-zero elements in the matrix, and
                 v is a numpy array representing the values of the non-zero elements
-            :param x: The parameter `x` is an array
-            :type x: Arr
+            :param _: The parameter `_` is an unused placeholder parameter
+            :type _: Arr
             :return: the gradient vector `g`.
             """
             s, n = Q.pos

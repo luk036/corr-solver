@@ -51,11 +51,11 @@ class GMIOracle:
 
         def get_elem(row, col):
             """
-            The function `get_elem` returns the evaluation of the function `H` at the given indices `i` and `j`,
+            The function `get_elem` returns the evaluation of the function `H` at the given indices `row` and `col`,
             with the input `x`.
 
-            :param i: The parameter "i" represents the row index of the element in the matrix
-            :param j: The parameter "j" represents the column index of the element in the matrix
+            :param row: The parameter "row" represents the row index of the element in the matrix
+            :param col: The parameter "col" represents the column index of the element in the matrix
             :return: The function `get_elem` is returning the result of calling the `eval` method on the `H`
                 object with the arguments `row`, `col`, and `x`.
             """
