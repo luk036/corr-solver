@@ -67,10 +67,10 @@ def mono_oracle(x):
 # The `mono_decreasing_oracle2` class is an oracle that checks if a given sequence is monotonically
 # decreasing.
 class mono_decreasing_oracle2:
-    """oracle for monotonic decreasing constraint
+    """Oracle for monotonic decreasing constraint.
 
-    Returns:
-        [type]: [description]
+    Wraps a basis oracle and enforces that the sequence of B-spline
+    coefficients must be monotonically non-increasing (non-increasing x[i] >= x[i+1]).
     """
 
     def __init__(self, basis):
