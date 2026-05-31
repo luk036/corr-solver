@@ -3,7 +3,7 @@
 import numpy as np
 from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
 from ellalgo.ell import Ell
-from ellalgo.ell_typing import OracleFeas2, OracleOptim
+from ellalgo.ell_typing import OracleFeas, OracleOptim
 from pytest import approx
 
 from corr_solver.corr_oracle import corr_poly, create_2d_isotropic, create_2d_sites
@@ -54,7 +54,7 @@ def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int):
     return corr_poly(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
-def lsq_corr_core(Y: np.ndarray, n: int, Q: OracleFeas2):
+def lsq_corr_core(Y: np.ndarray, n: int, Q: OracleFeas):
     x = np.zeros(n)  # cannot all zeros
     x[0] = 1.0
     ellip = Ell(256.0, x)
