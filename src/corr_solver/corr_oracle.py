@@ -165,7 +165,9 @@ def construct_poly_matrix(site: Arr, m: int) -> List[Arr]:
     return Sigma
 
 
-def corr_poly(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> Tuple[Any, int, bool]:
+def corr_poly(
+    Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any
+) -> Tuple[Any, int, bool]:
     """
     The function `corr_poly` takes in a signal `Y`, a sparsity level `site`, a maximum degree `m`, an
     oracle function, and a correction core function, and returns a polynomial, the number of iterations,

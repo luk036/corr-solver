@@ -132,7 +132,9 @@ class mono_decreasing_oracle2:
         return self.basis.assess_optim(x, t)
 
 
-def corr_bspline(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> Tuple[Any, int, bool]:
+def corr_bspline(
+    Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any
+) -> Tuple[Any, int, bool]:
     """
     The `corr_bspline` function takes in input parameters `Y`, `site`, `m`, `oracle`, and `corr_core`, and
     returns a BSpline object, the number of iterations, and a feasibility indicator.

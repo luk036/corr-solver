@@ -17,7 +17,9 @@ site = create_2d_sites(5, 4)
 Y = create_2d_isotropic(site, 3000)
 
 
-def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]) -> Tuple[np.ndarray, int, bool]:
+def lsq_corr_core2(
+    Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]
+) -> Tuple[np.ndarray, int, bool]:
     """[summary]
 
     Arguments:
@@ -81,7 +83,9 @@ def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bo
     return corr_poly(Y, site, n, QMIOracle, lsq_corr_core)
 
 
-def mle_corr_core(_: np.ndarray, n: int, omega: OracleOptim[np.ndarray]) -> Tuple[Any, int, bool]:
+def mle_corr_core(
+    _: np.ndarray, n: int, omega: OracleOptim[np.ndarray]
+) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:
