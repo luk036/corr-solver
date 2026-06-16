@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Any, Tuple
+
 import numpy as np
 from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
 from ellalgo.ell import Ell
@@ -15,7 +17,7 @@ site = create_2d_sites(5, 4)
 Y = create_2d_isotropic(site, 3000)
 
 
-def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
+def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]) -> Tuple[np.ndarray, int, bool]:
     """[summary]
 
     Arguments:
@@ -40,7 +42,7 @@ def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
     return xbest[:-1], num_iters, True
 
 
-def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int):
+def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:
@@ -54,7 +56,7 @@ def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int):
     return corr_poly(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
-def lsq_corr_core(Y: np.ndarray, n: int, Q: OracleFeas):
+def lsq_corr_core(Y: np.ndarray, n: int, Q: OracleFeas) -> Tuple[Any, int, bool]:
     x = np.zeros(n)  # cannot all zeros
     x[0] = 1.0
     ellip = Ell(256.0, x)
@@ -65,7 +67,7 @@ def lsq_corr_core(Y: np.ndarray, n: int, Q: OracleFeas):
     return omega.x_best, num_iters, t != upper
 
 
-def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
+def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:
@@ -79,7 +81,7 @@ def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
     return corr_poly(Y, site, n, QMIOracle, lsq_corr_core)
 
 
-def mle_corr_core(_: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
+def mle_corr_core(_: np.ndarray, n: int, omega: OracleOptim[np.ndarray]) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:
@@ -100,7 +102,7 @@ def mle_corr_core(_: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
     return xbest, num_iters, xbest is not None
 
 
-def mle_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
+def mle_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:

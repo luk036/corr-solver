@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -42,7 +42,7 @@ class QMIOracle:
             n, m = F0.shape
             self.Fx = np.zeros([m, n])
 
-        def update(self, t: float):
+        def update(self, t: float) -> None:
             """
             The `update` function updates the value of `self.t` with the input `t`.
 
@@ -51,7 +51,7 @@ class QMIOracle:
             """
             self.t = t
 
-        def eval(self, row, col, x: Arr) -> float:
+        def eval(self, row: int, col: int, x: Arr) -> float:
             """
             The `eval` function calculates a value based on the given parameters and returns it.
 
@@ -73,7 +73,7 @@ class QMIOracle:
                 return self.t + a
             return a
 
-        def neg_grad_sym_quad(self, Q, _: Arr):
+        def neg_grad_sym_quad(self, Q: Any, _: Arr) -> np.ndarray:
             """
             The function `neg_grad_sym_quad` calculates the negative gradient of a symmetric quadratic function.
 
@@ -90,7 +90,7 @@ class QMIOracle:
             g = np.array([-2 * ((v @ Fk[s:n]) @ Av) for Fk in self.F])
             return g
 
-    def __init__(self, F, F0):
+    def __init__(self, F: List[Arr], F0: Arr) -> None:
         """
         The function initializes an object with attributes qmi, gmi, and Q based on the input arguments F
         and F0.
@@ -105,7 +105,7 @@ class QMIOracle:
         self.gmi = GMIOracle(self.qmi, m)
         self.ldlt_mgr = self.gmi.ldlt_mgr
 
-    def update(self, t: float):
+    def update(self, t: float) -> None:
         """
         The function updates the best-so-far optimal value.
 

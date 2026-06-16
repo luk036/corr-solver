@@ -56,7 +56,7 @@ curve to a set of data points, which can be useful in various applications
 such as data analysis, signal processing, or computer graphics.
 """
 
-from typing import Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 from scipy.interpolate import BSpline
@@ -67,7 +67,7 @@ Arr = Union[np.ndarray]
 Cut = Tuple[Arr, float]
 
 
-def mono_oracle(x):
+def mono_oracle(x: Arr) -> Optional[Tuple[Arr, float]]:
     """
     The `mono_oracle` function is an oracle that checks if a given array `x` satisfies the monotonic
     decreasing constraint and returns the gradient and the first violation if it exists.
@@ -98,7 +98,7 @@ class mono_decreasing_oracle2:
     coefficients must be monotonically non-increasing (non-increasing x[i] >= x[i+1]).
     """
 
-    def __init__(self, basis):
+    def __init__(self, basis: Any) -> None:
         """
         The function initializes an object with a given basis.
 
@@ -132,7 +132,7 @@ class mono_decreasing_oracle2:
         return self.basis.assess_optim(x, t)
 
 
-def corr_bspline(Y, site, m, oracle, corr_core):
+def corr_bspline(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> Tuple[Any, int, bool]:
     """
     The `corr_bspline` function takes in input parameters `Y`, `site`, `m`, `oracle`, and `corr_core`, and
     returns a BSpline object, the number of iterations, and a feasibility indicator.
@@ -154,7 +154,7 @@ def corr_bspline(Y, site, m, oracle, corr_core):
     return BSpline(t, c, k), num_iters, feasible
 
 
-def generate_bspline_info(site, m):
+def generate_bspline_info(site: Arr, m: int) -> Tuple[List[Arr], np.ndarray, int]:
     """
     The function `generate_bspline_info` generates B-spline information given a set of points and a
     desired number of B-splines.

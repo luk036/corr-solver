@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Any, Tuple
+
 import numpy as np
 from ellalgo.cutting_plane import cutting_plane_optim
 from ellalgo.ell import Ell
@@ -17,7 +19,7 @@ site = create_2d_sites(5, 4)
 Y = create_2d_isotropic(site, 3000)
 
 
-def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
+def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]) -> Tuple[np.ndarray, int, bool]:
     """[summary]
 
     Arguments:
@@ -42,7 +44,7 @@ def lsq_corr_core2(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
     return xbest[:-1], num_iters, True
 
 
-def mle_corr_core(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
+def mle_corr_core(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:
@@ -65,7 +67,7 @@ def mle_corr_core(Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]):
     return xbest, num_iters, xbest is not None
 
 
-def mle_corr_bspline(Y: np.ndarray, site: np.ndarray, n: int):
+def mle_corr_bspline(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:
@@ -80,7 +82,7 @@ def mle_corr_bspline(Y: np.ndarray, site: np.ndarray, n: int):
     return corr_bspline(Y, site, n, mle_oracle, mle_corr_core)
 
 
-def lsq_corr_bspline2(Y: np.ndarray, site: np.ndarray, n: int):
+def lsq_corr_bspline2(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
     """[summary]
 
     Arguments:

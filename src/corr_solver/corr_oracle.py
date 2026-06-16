@@ -57,7 +57,7 @@ way to take raw location data and turn it into a mathematical model that can
 help predict or explain patterns in the data.
 """
 
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import numpy as np
 from lds_gen.lds import Halton
@@ -66,7 +66,7 @@ Arr = np.ndarray
 Cut = Tuple[Arr, float]
 
 
-def create_2d_sites(nx=10, ny=8) -> Arr:
+def create_2d_sites(nx: int = 10, ny: int = 8) -> Arr:
     """
     The function `create_2d_sites` generates a 2D array of site locations using the Halton sequence.
 
@@ -83,7 +83,7 @@ def create_2d_sites(nx=10, ny=8) -> Arr:
     return site
 
 
-def create_2d_isotropic(site: Arr, N=3000) -> Arr:
+def create_2d_isotropic(site: Arr, N: int = 3000) -> Arr:
     """
     The function `create_2d_isotropic` generates a biased covariance matrix for a 2D isotropic object
     based on the location of sites.
@@ -143,7 +143,7 @@ def construct_distance_matrix(site: Arr) -> Arr:
     return D1
 
 
-def construct_poly_matrix(site: Arr, m) -> List[Arr]:
+def construct_poly_matrix(site: Arr, m: int) -> List[Arr]:
     """
     The function `construct_poly_matrix` takes in a list of site locations `site` and a degree `m`, and
     returns a list of distance matrices for a polynomial of degree `m`.
@@ -165,7 +165,7 @@ def construct_poly_matrix(site: Arr, m) -> List[Arr]:
     return Sigma
 
 
-def corr_poly(Y, site, m, oracle, corr_core):
+def corr_poly(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> Tuple[Any, int, bool]:
     """
     The function `corr_poly` takes in a signal `Y`, a sparsity level `site`, a maximum degree `m`, an
     oracle function, and a correction core function, and returns a polynomial, the number of iterations,

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import numpy as np
 from ellalgo.oracles.ldlt_mgr import LDLTMgr
@@ -18,7 +18,7 @@ class GMIOracle:
     H.neggrad[k](rng, x): negative gradient in range rng, the k-term
     """
 
-    def __init__(self, H, m):
+    def __init__(self, H: Any, m: int) -> None:
         """
         The function initializes an object with attributes H, m, and Q.
 
@@ -49,7 +49,7 @@ class GMIOracle:
         :return: The function `assess_feas` returns an optional `Cut` object.
         """
 
-        def get_elem(row, col):
+        def get_elem(row: int, col: int) -> float:
             """
             The function `get_elem` returns the evaluation of the function `H` at the given indices `row` and `col`,
             with the input `x`.
