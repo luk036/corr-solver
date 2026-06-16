@@ -75,12 +75,13 @@ class lsq_oracle:
 
     Solves the problem: min ||F0 - F(x)|| s.t. F(x) >= 0
 
-    The oracle transforms the problem into:
+    The oracle transforms the problem into::
+
         min t
         s.t. x[n+1] <= t
              x[n+1]*I - F(x)^T F(x) >= 0
 
-    where F(x) = F[1] x[1] + ... + F[n] x[n] and {Fk}i,j = Ψk(||sj - si||)
+    where ``F(x) = F[1] x[1] + ... + F[n] x[n]`` and ``{Fk}i,j = Ψk(||sj - si||)``
     """
 
     def __init__(self, F: List[Arr], F0: Arr):
