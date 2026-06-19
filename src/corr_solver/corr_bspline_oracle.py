@@ -87,6 +87,7 @@ def mono_oracle(x: Arr) -> Optional[Tuple[Arr, float]]:
             g[i] = -1.0
             g[i + 1] = 1.0
             return g, fj
+    return None
 
 
 # The `mono_decreasing_oracle2` class is an oracle that checks if a given sequence is monotonically
