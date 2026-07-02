@@ -1,3 +1,15 @@
+"""Correlation Solver
+
+.. svgbob::
+   :align: center
+
+        Input ──► Correlate ──► Output
+                   │     ▲
+                   │     │
+                   ▼     │
+                Feedback Loop
+"""
+
 from importlib.metadata import PackageNotFoundError, version  # pragma: no cover
 
 try:
