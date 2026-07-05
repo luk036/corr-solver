@@ -61,6 +61,7 @@ from typing import Any, List, Tuple
 
 import numpy as np
 from lds_gen.lds import Halton
+from scipy.spatial.distance import pdist, squareform
 
 Arr = np.ndarray
 Cut = Tuple[Arr, float]
@@ -103,20 +104,19 @@ def create_2d_isotropic(site: Arr, N: int = 3000) -> Arr:
     tau = 0.00001  # standard derivation of white noise
     np.random.seed(5)
 
-    Sigma = np.zeros((n, n))
-    for row in range(n):
-        for col in range(row, n):
-            d = np.array(site[col]) - np.array(site[row])
-            Sigma[row, col] = np.exp(-sdkern * (d.dot(d)))
-            Sigma[col, row] = Sigma[row, col]
+    # Vectorized covariance construction via pairwise squared distances
+    dist_sq = squareform(pdist(site, 'sqeuclidean'))
+    Sigma = np.exp(-sdkern * dist_sq)
 
     A = np.linalg.cholesky(Sigma)
     Y = np.zeros((n, n))
+    outer_buf = np.empty((n, n))
 
     for _ in range(N):
         x = var * np.random.randn(n)
         y = A @ x + tau * np.random.randn(n)
-        Y += np.outer(y, y)
+        np.outer(y, y, out=outer_buf)
+        Y += outer_buf
 
     Y /= N
     return Y
@@ -132,15 +132,7 @@ def construct_distance_matrix(site: Arr) -> Arr:
     :type site: Arr
     :return: a distance matrix object.
     """
-    n = len(site)
-    D1 = np.zeros((n, n))
-    for row in range(n):
-        for col in range(row + 1, n):
-            h = site[col] - site[row]
-            d = np.sqrt(h @ h)
-            D1[row, col] = d
-            D1[col, row] = d
-    return D1
+    return squareform(pdist(site))
 
 
 def construct_poly_matrix(site: Arr, m: int) -> List[Arr]:

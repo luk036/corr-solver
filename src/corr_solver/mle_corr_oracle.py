@@ -111,12 +111,13 @@ class mle_oracle:
         f1 = 2 * np.sum(np.log(diag)) + np.trace(SY)
 
         n = len(x)
-        m = len(self.Y)
         g = np.zeros(n)
+        # g[i] = tr(S @ Sigma[i]) - tr(S @ Sigma[i] @ SY)
+        #      = tr((S - SY @ S) @ Sigma[i])      [cyclic perm of trace]
+        #      = sum((S - SY @ S).T * Sigma[i])    [Frobenius inner prod]
+        V = S - SY @ S  # pre-compute once, n×n
         for i in range(n):
-            SFsi = S @ self.Sigma[i]
-            g[i] = np.trace(SFsi)
-            g[i] -= sum(SFsi[k, :] @ SY[:, k] for k in range(m))
+            g[i] = np.sum(V.T * self.Sigma[i])
 
         if (f := f1 - t) >= 0:
             return (g, f), None
