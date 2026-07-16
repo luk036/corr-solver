@@ -105,7 +105,7 @@ def create_2d_isotropic(site: Arr, N: int = 3000) -> Arr:
     np.random.seed(5)
 
     # Vectorized covariance construction via pairwise squared distances
-    dist_sq = squareform(pdist(site, 'sqeuclidean'))
+    dist_sq = squareform(pdist(site, "sqeuclidean"))
     Sigma = np.exp(-sdkern * dist_sq)
 
     A = np.linalg.cholesky(Sigma)
