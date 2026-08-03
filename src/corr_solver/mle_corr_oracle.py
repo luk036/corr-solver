@@ -1,50 +1,18 @@
 """
-mle_oracle
+Maximum-likelihood estimation oracle.
 
-This code defines a class called mle_oracle which is designed to solve a maximum
-likelihood estimation problem. The purpose of this code is to find the best
-parameters for a statistical model based on observed data, while satisfying
-certain constraints.
+Fits coefficients ``p`` of ``Omega(p)`` to a biased sample covariance matrix
+``Y`` by minimizing ``log det Omega(p) + Tr(Omega(p)^{-1} Y)`` subject to
+``2Y >= Omega(p) >= 0``. Feasibility is checked with the ``lmi`` and ``lmi0``
+oracles; the objective and its gradient are then compared against the
 
-The mle_oracle class takes two inputs when initialized: Sigma and Y. Sigma
-represents a covariance matrix, which describes how different variables in a
-dataset are related to each other. Y is a biased sample covariance matrix, which
-is an estimate of the true covariance based on observed data.
+best-so-far value ``t``.
 
-The main output of this class is produced by the assess_optim method. This
-method takes two inputs: x (a set of coefficients) and t (the best optimal
-value found so far). It returns a tuple containing information about whether the
-current solution is feasible and optimal, along with some additional values used
-in the optimization process.
 
-To achieve its purpose, the code uses a technique called linear matrix
-inequality (LMI) optimization. It creates two LMI oracles (lmi0 and lmi) which
-are used to check if the current solution satisfies certain constraints. The
-assess_optim method first checks if the solution is feasible using these
-oracles. If it's not feasible, it returns information about why it's not
-feasible.
 
-If the solution is feasible, the method then calculates a value f1, which
-represents the objective function of the maximum likelihood estimation problem.
-This calculation involves matrix operations like inversion, multiplication, and
-calculating traces and determinants. The method also computes a gradient g,
-which indicates how the objective function changes with respect to small changes
-in the input x.
 
-Finally, the method compares the calculated f1 with the input t to determine if
-a better solution has been found. If f1 is better than t, it returns this new
-value along with the gradient. Otherwise, it returns information that can be
-used to continue the optimization process.
 
-The important logic flows in this code include the feasibility checks, the
-calculation of the objective function and its gradient, and the comparison of
-the current solution with the best known solution. The data transformations
-mainly involve matrix operations on the input covariance matrices.
 
-Overall, this code provides a way to solve a complex statistical optimization
-problem by iteratively improving a solution while ensuring it satisfies certain
-constraints. It's a building block that would typically be used as part of a
-larger optimization algorithm.
 """
 
 from typing import List, Optional, Tuple
@@ -65,17 +33,7 @@ class mle_oracle:
             min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
             s.t. 2Y ⪰ Ω(p) ⪰ 0,
 
-        The function initializes an object with given covariance matrix and biased covariance matrix,
-        and creates LMI oracles for optimization.
 
-        :param Sigma: The parameter "Sigma" represents the covariance matrix, which is a square matrix that
-            describes the variances and covariances of a set of random variables. It is used in the maximum
-            likelihood estimation algorithm to estimate the parameters of a statistical model
-        :type Sigma: List[np.ndarray]
-        :param Y: The parameter Y represents a biased sample covariance matrix. It is used in the maximum
-            likelihood estimation problem to constrain the covariance matrix Ω(p) such that 2Y is greater
-            than or equal to Ω(p)
-        :type Y: np.ndarray
         """
         self.Y = Y
         self.Sigma = Sigma

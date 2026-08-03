@@ -38,7 +38,6 @@ class QMIOracle:
             self.Fx = np.zeros([m, n])
 
         def update(self, t: float) -> None:
-            """Update best-so-far optimal value."""
             self.t = t
 
         def eval(self, row: int, col: int, x: Arr) -> float:
@@ -83,7 +82,6 @@ class QMIOracle:
         self.ldlt_mgr = self.gmi.ldlt_mgr
 
     def update(self, t: float) -> None:
-        """Update best-so-far optimal value."""
         self.qmi.update(t)
 
     def assess_feas(self, x: Arr) -> Optional[Cut]:

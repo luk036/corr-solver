@@ -1,50 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Least Squares Correlation Oracle
+Least-squares correlation oracle.
 
-This code defines a class called lsq_oracle (least squares oracle) that is
-designed to solve a specific type of optimization problem. The purpose of this
-code is to find the best solution to a mathematical problem involving matrices
-and inequalities.
-
-The lsq_oracle class takes two inputs when it's created: a list of arrays
-called F and another array called F0. These inputs represent mathematical objects
-that define the problem the oracle is trying to solve.
-
-The main output of this code is produced by the assess_optim method. This method
-takes two inputs: an array x (which represents a potential solution) and a
-float t (which represents the best solution found so far). It returns
-information about whether the given solution is feasible and optimal, and if
-not, it provides guidance on how to improve the solution.
-
-The code achieves its purpose through a two-step process:
-
-1. First, it checks if the solution satisfies certain constraints using the
-lmi0 oracle.
-2. If that passes, it then checks another set of constraints using the qmi
-oracle.
-
-If either of these checks fail, the method returns information about how the
-solution violates the constraints. If both checks pass, it compares the current
-solution to the best solution found so far.
-
-An important transformation happening in this code is the conversion of the
-original problem into a slightly different form. Instead of directly minimizing
-the difference between F0 and F(x), it introduces a new variable t and tries to
-minimize t while ensuring that certain conditions involving t are met. This
-transformation allows the problem to be solved using standard optimization
-techniques.
-
-The code uses some advanced mathematical concepts (like matrix inequalities)
-that might be challenging for a beginner to fully understand. However, the
-overall structure of the code follows a logical flow: initialize the problem,
-check constraints, and either return information about constraint violations or
-assess the optimality of the solution.
-
-In simple terms, you can think of this code as a smart calculator that's
-trying to solve a complex math problem. It takes in the problem description (F
-and F0), tries different solutions (x), and tells you whether each solution is
-good or not, and how to make it better if it's not good enough.
+Solves ``min ||F0 - F(x)|| s.t. F(x) >= 0`` for a matrix ``F(x)`` built from
+basis matrices ``F[k]``. Feasibility is checked through the ``lmi0`` oracle,
+then the ``qmi`` oracle for the quadratic-matrix-inequality reformulation;
+optimality is assessed against the best-so-far value ``t``.
 """
 
 from typing import List, Optional, Tuple, Union
@@ -85,14 +46,6 @@ class lsq_oracle:
     """
 
     def __init__(self, F: List[Arr], F0: Arr):
-        """
-        The function initializes the `qmi` and `lmi0` oracles with the given parameters.
-
-        :param F: A list of arrays (F) representing a set of quadratic matrix inequalities (QMIs)
-        :type F: List[Arr]
-        :param F0: F0 is an array representing the initial feasible solution for the optimization problem
-        :type F0: Arr
-        """
         self.qmi = QMIOracle(F, F0)
         self.lmi0 = LMI0Oracle(F)
 
@@ -125,7 +78,6 @@ class lsq_oracle:
             g1, fj = cut
             g[:-1] = g1
             self.qmi.ldlt_mgr.witness()
-            # n = self.qmi.ldlt_mgr.pos[-1] + 1
             s, n = self.qmi.ldlt_mgr.pos
             wit = self.qmi.ldlt_mgr.wit[s:n]
             g[-1] = -(wit @ wit)
