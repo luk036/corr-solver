@@ -129,7 +129,11 @@ def test_data() -> None:
 def test_lsq_corr_poly() -> None:
     _, num_iters, feasible = lsq_corr_poly(Y, site, 4)
     assert feasible
-    assert num_iters <= 2000
+    # A bisection at float precision needs ~62 steps here. The bound is tight
+    # enough to catch a regression in the search-space termination: without the
+    # floating-point stall guard in ellalgo's `bsearch`, this runs to the
+    # 2000-iteration cap because `tau < tolerance` is unreachable.
+    assert num_iters <= 100
 
 
 def test_lsq_corr_poly2() -> None:
