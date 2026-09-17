@@ -77,6 +77,55 @@ def _ldlt(M: Arr, n: int, L: Arr, D: Arr, wit: Arr) -> int:  # pragma: no cover
 
 
 @njit(cache=True, fastmath=False)
+def _qmi_fx(Fstack: Arr, F0: Arr, x: Arr, Fx: Arr) -> None:  # pragma: no cover
+    """Assemble ``Fx[r, c] = F0[c, r] - sum_k Fstack[k, c, r] * x[k]``."""
+    ncol = F0.shape[0]
+    mdim = F0.shape[1]
+    nk = Fstack.shape[0]
+    for r in range(mdim):
+        for c in range(ncol):
+            s = F0[c, r]
+            for k in range(nk):
+                s -= Fstack[k, c, r] * x[k]
+            Fx[r, c] = s
+
+
+@njit(cache=True, fastmath=False)
+def _qmi_matrix(Fx: Arr, t: float, M: Arr) -> None:  # pragma: no cover
+    """Assemble the quadratic matrix inequality ``M = t*I - Fx @ Fx.T``."""
+    mdim = M.shape[0]
+    ncol = Fx.shape[1]
+    for i in range(mdim):
+        for j in range(mdim):
+            s = 0.0
+            for c in range(ncol):
+                s += Fx[i, c] * Fx[j, c]
+            Mij = -s
+            if i == j:
+                Mij += t
+            M[i, j] = Mij
+
+
+@njit(cache=True, fastmath=False)
+def _qmi_grad(
+    Fstack: Arr, Fx: Arr, wit: Arr, pos1: int, g: Arr
+) -> None:  # pragma: no cover
+    """Assemble the subgradient from the witness vector over the failed block."""
+    nk = Fstack.shape[0]
+    ncol = Fx.shape[1]
+    for k in range(nk):
+        acc = 0.0
+        for j in range(ncol):
+            u = 0.0
+            av = 0.0
+            for i in range(pos1):
+                u += wit[i] * Fstack[k, i, j]
+                av += wit[i] * Fx[i, j]
+            acc += u * av
+        g[k] = -2.0 * acc
+
+
+@njit(cache=True, fastmath=False)
 def _qmi_assess(  # pragma: no cover
     Fstack: Arr,
     F0: Arr,
@@ -90,37 +139,12 @@ def _qmi_assess(  # pragma: no cover
     g: Arr,
 ) -> Tuple[bool, int]:
     """Feasibility check for ``t*I - F(x)^T F(x) >= 0`` with ``F(x) = F0 - sum_k F_k x_k``."""
-    ncol = F0.shape[0]
-    mdim = F0.shape[1]
-    nk = Fstack.shape[0]
-    for r in range(mdim):
-        for c in range(ncol):
-            s = F0[c, r]
-            for k in range(nk):
-                s -= Fstack[k, c, r] * x[k]
-            Fx[r, c] = s
-    for i in range(mdim):
-        for j in range(mdim):
-            s = 0.0
-            for c in range(ncol):
-                s += Fx[i, c] * Fx[j, c]
-            Mij = -s
-            if i == j:
-                Mij += t
-            M[i, j] = Mij
-    pos1 = _ldlt(M, mdim, L, D, wit)
+    _qmi_fx(Fstack, F0, x, Fx)
+    _qmi_matrix(Fx, t, M)
+    pos1 = _ldlt(M, F0.shape[1], L, D, wit)
     if pos1 == 0:
         return True, 0
-    for k in range(nk):
-        acc = 0.0
-        for j in range(ncol):
-            u = 0.0
-            av = 0.0
-            for i in range(pos1):
-                u += wit[i] * Fstack[k, i, j]
-                av += wit[i] * Fx[i, j]
-            acc += u * av
-        g[k] = -2.0 * acc
+    _qmi_grad(Fstack, Fx, wit, pos1, g)
     return False, pos1
 
 
