@@ -30,8 +30,8 @@ class mle_oracle:
     def __init__(self, Sigma: List[np.ndarray], Y: np.ndarray):
         """Maximum likelyhood estimation:
 
-            min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
-            s.t. 2Y ⪰ Ω(p) ⪰ 0,
+        min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
+        s.t. 2Y ⪰ Ω(p) ⪰ 0,
 
 
         """
