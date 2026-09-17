@@ -67,7 +67,6 @@ class mono_decreasing_oracle2:
     """
 
     def __init__(self, basis: Any) -> None:
-
         self.basis = basis
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:

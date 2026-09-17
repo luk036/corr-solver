@@ -19,7 +19,6 @@ class GMIOracle:
     """
 
     def __init__(self, H: Any, m: int) -> None:
-
         self.H = H
         self.m = m
         self.ldlt_mgr = LDLTMgr(m)
@@ -35,7 +34,6 @@ class GMIOracle:
         """
 
         def get_elem(row: int, col: int) -> float:
-
             return self.H.eval(row, col, x)
 
         if self.ldlt_mgr.factor(get_elem):
