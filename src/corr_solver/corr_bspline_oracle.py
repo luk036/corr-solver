@@ -64,10 +64,17 @@ class mono_decreasing_oracle2:
 
     Wraps a basis oracle and enforces that the sequence of B-spline
     coefficients must be monotonically non-increasing (non-increasing x[i] >= x[i+1]).
+
+    :param basis: the wrapped oracle
+    :param n_coeff: number of leading entries of ``x`` that are control
+        coefficients; defaults to ``len(x) - 1`` (drops a trailing objective
+        variable). Pass ``m`` explicitly when the solver core passes coefficients
+        only, as the MLE core does.
     """
 
-    def __init__(self, basis: Any) -> None:
+    def __init__(self, basis: Any, n_coeff: Optional[int] = None) -> None:
         self.basis = basis
+        self.n_coeff = n_coeff
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """
@@ -82,13 +89,12 @@ class mono_decreasing_oracle2:
         :return: The function `assess_optim` returns a tuple containing a `Cut` object and an optional float
             value.
         """
-        # monotonic decreasing constraint
         n = len(x)
+        k = n - 1 if self.n_coeff is None else self.n_coeff
         g = np.zeros(n)
-        if cut := mono_oracle(x[:-1]):
+        if cut := mono_oracle(x[:k]):
             g1, fj = cut
-            g[:-1] = g1
-            g[-1] = 0.0
+            g[:k] = g1
             return (g, fj), None
         return self.basis.assess_optim(x, t)
 
@@ -112,7 +118,7 @@ def corr_bspline(
     """
     Sigma, t, k = generate_bspline_info(site, m)
     Pb = oracle(Sigma, Y)
-    omega = mono_decreasing_oracle2(Pb)
+    omega = mono_decreasing_oracle2(Pb, m)
     c, num_iters, feasible = corr_core(Y, m, omega)
     return BSpline(t, c, k), num_iters, feasible
 
@@ -129,16 +135,18 @@ def generate_bspline_info(site: Arr, m: int) -> Tuple[List[Arr], np.ndarray, int
     :return: The function `generate_bspline_info` returns three values: `Sigma`, `t`, and `k`.
     """
     k = 2  # quadratic bspline
-    h = site[-1] - site[0]
-    d = np.sqrt(h @ h)
-    t = np.linspace(0, d * 1.2, m + k + 1)
+    if m < k + 1:
+        raise ValueError(
+            f"quadratic B-spline needs m >= {k + 1} control points, got {m}"
+        )
+    D = construct_distance_matrix(site)
+    dmax = float(D.max())
+    interior = np.linspace(0.0, dmax, m - k - 1 + 2)[1:-1]
+    t = np.concatenate((np.zeros(k + 1), interior, np.full(k + 1, dmax)))
     spls = []
     for i in range(m):
         coeff = np.zeros(m)
         coeff[i] = 1
         spls += [BSpline(t, coeff, k)]
-    D = construct_distance_matrix(site)
-    Sigma = []
-    for i in range(m):
-        Sigma += [spls[i](D)]
+    Sigma = [spls[i](D) for i in range(m)]
     return Sigma, t, k
