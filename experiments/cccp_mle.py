@@ -12,48 +12,30 @@ a polynomial-basis wrapper and a small demonstration.
 """
 
 import numpy as np
-from ellalgo.cutting_plane import cutting_plane_optim
-from ellalgo.ell import Ell
 
 from corr_solver.cccp_mle_oracle import cccp_mle as _cccp_mle
-from corr_solver.cccp_mle_oracle import cccp_mle_oracle, mle_obj, omega_of
+from corr_solver.cccp_mle_oracle import cccp_mle_oracle
 from corr_solver.corr_oracle import (
     construct_poly_matrix,
     corr_poly,
     create_2d_isotropic,
     create_2d_sites,
 )
+from corr_solver.kernels import exponential
 from corr_solver.lsq_corr_oracle import lsq_oracle
+from corr_solver.math_utils import mle_obj, omega_of
 from corr_solver.mle_corr_oracle import mle_oracle
+from corr_solver.solvers import lsq_corr_core2, mle_corr_core
 
 __all__ = [
     "cccp_mle",
     "cccp_mle_oracle",
-    "lsq_core2",
+    "lsq_corr_core2",
     "make_expo_Y",
-    "mle_core",
+    "mle_corr_core",
     "mle_obj",
     "omega_of",
 ]
-
-
-def lsq_core2(Y, n, omega):
-    normY = np.linalg.norm(Y, "fro")
-    normY2 = 32 * normY * normY
-    val = 256 * np.ones(n + 1)
-    val[-1] = normY2 * normY2
-    x = np.zeros(n + 1)
-    x[0] = 1.0
-    x[-1] = normY2 / 2
-    xb, _, it = cutting_plane_optim(omega, Ell(val, x), float("inf"))
-    return xb[:-1], it, True
-
-
-def mle_core(_, n, omega):
-    x = np.zeros(n)
-    x[0] = 1.0
-    xb, _, it = cutting_plane_optim(omega, Ell(50.0, x), float("inf"))
-    return xb, it, xb is not None
 
 
 def cccp_mle(Y, site, m, x0, n_outer=40, tol=1e-8):
@@ -62,10 +44,11 @@ def cccp_mle(Y, site, m, x0, n_outer=40, tol=1e-8):
     return _cccp_mle(Y, Sigma, x0, n_outer=n_outer, tol=tol)
 
 
-def make_expo_Y(site, N=3000):
-    rng = np.random.RandomState(5)
-    D = np.sqrt(np.sum((site[:, None, :] - site[None, :, :]) ** 2, axis=-1))
-    A = np.linalg.cholesky(np.exp(-0.3 * D))
+def make_expo_Y(site, N=3000, rng=None):
+    if rng is None:
+        rng = np.random.RandomState(5)
+    D2 = np.sum((site[:, None, :] - site[None, :, :]) ** 2, axis=-1)
+    A = np.linalg.cholesky(exponential(D2, 0.3))
     n = site.shape[0]
     Y = np.zeros((n, n))
     for _ in range(N):
@@ -89,8 +72,8 @@ def main():
         ("expo (matched)", make_expo_Y(site), 4.0 * np.exp(-0.3 * D)),
     ]
     for name, Y, true in cases:
-        x_lsq = corr_poly(Y, site, m, lsq_oracle, lsq_core2)[0].c[::-1]
-        x_mle = corr_poly(Y, site, m, mle_oracle, mle_core)[0].c[::-1]
+        x_lsq = corr_poly(Y, site, m, lsq_oracle, lsq_corr_core2)[0].c[::-1]
+        x_mle = corr_poly(Y, site, m, mle_oracle, mle_corr_core)[0].c[::-1]
         x_cccp, n_outer = cccp_mle(Y, site, m, x_lsq)
 
         print(f"\n=== {name} ===")

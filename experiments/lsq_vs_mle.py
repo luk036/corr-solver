@@ -17,23 +17,28 @@ Results are printed as a table and saved as PNG figures.
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
-from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
-from ellalgo.ell import Ell
+from common import (
+    PROBLEM_SPECS,
+    build_problems,
+    mle_objective,
+    true_covariance,
+    true_kernel,
+)
 
 from corr_solver.corr_bspline_oracle import corr_bspline, generate_bspline_info
 from corr_solver.corr_oracle import (
     construct_distance_matrix,
     construct_poly_matrix,
     corr_poly,
-    create_2d_isotropic,
     create_2d_sites,
 )
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.qmi_oracle import QMIOracle
+from corr_solver.solvers import lsq_corr_core, lsq_corr_core2, mle_corr_core
 
 try:
     import matplotlib
@@ -46,87 +51,6 @@ except ImportError:  # pragma: no cover
     HAS_MPL = False
 
 Arr = np.ndarray
-
-SDKERN = 0.12
-VAR = 2.0
-TAU = 0.00001
-
-PROBLEM_SPECS: Dict[str, Tuple[float, float]] = {
-    "iso (1,1)": (1.0, 1.0),
-    "aniso (1,3)": (1.0, 3.0),
-    "aniso (3,1)": (3.0, 1.0),
-}
-
-
-def lsq_corr_core2(Y: Arr, n: int, omega: Any) -> Tuple[Arr, int, bool]:
-    normY = np.linalg.norm(Y, "fro")
-    normY2 = 32 * normY * normY
-    val = 256 * np.ones(n + 1)
-    val[-1] = normY2 * normY2
-    x = np.zeros(n + 1)
-    x[0] = 1.0
-    x[-1] = normY2 / 2
-    xbest, _, num_iters = cutting_plane_optim(omega, Ell(val, x), float("inf"))
-    if xbest is None:
-        return np.zeros(n), num_iters, False
-    return xbest[:-1], num_iters, True
-
-
-def lsq_corr_core(Y: Arr, n: int, Q: Any) -> Tuple[Arr, int, bool]:
-    x = np.zeros(n)
-    x[0] = 1.0
-    omega = BSearchAdaptor(Q, Ell(256.0, x))
-    upper = np.linalg.norm(Y, "fro") ** 2
-    t, num_iters = bsearch(omega, (0.0, upper))
-    return omega.x_best, num_iters, t != upper
-
-
-def mle_corr_core(_: Arr, n: int, omega: Any) -> Tuple[Arr, int, bool]:
-    x = np.zeros(n)
-    x[0] = 1.0
-    xbest, _, num_iters = cutting_plane_optim(omega, Ell(50.0, x), float("inf"))
-    return xbest, num_iters, xbest is not None
-
-
-def create_2d_anisotropic(
-    site: Arr, length_x: float, length_y: float, N: int = 3000
-) -> Arr:
-    n = site.shape[0]
-    rng = np.random.RandomState(5)
-
-    dx = site[:, None, 0] - site[None, :, 0]
-    dy = site[:, None, 1] - site[None, :, 1]
-    dist_sq = (dx / length_x) ** 2 + (dy / length_y) ** 2
-    Sigma = np.exp(-SDKERN * dist_sq)
-
-    A = np.linalg.cholesky(Sigma)
-    Y = np.zeros((n, n))
-    outer_buf = np.empty((n, n))
-    for _ in range(N):
-        y = A @ (VAR * rng.randn(n)) + TAU * rng.randn(n)
-        np.outer(y, y, out=outer_buf)
-        Y += outer_buf
-    return Y / N
-
-
-def true_covariance(site: Arr, length_x: float, length_y: float) -> Arr:
-    dx = site[:, None, 0] - site[None, :, 0]
-    dy = site[:, None, 1] - site[None, :, 1]
-    dist_sq = (dx / length_x) ** 2 + (dy / length_y) ** 2
-    C = (VAR**2) * np.exp(-SDKERN * dist_sq)
-    np.fill_diagonal(C, C.diagonal() + TAU**2)
-    return C
-
-
-def true_kernel(h: Arr, length: float) -> Arr:
-    return (VAR**2) * np.exp(-SDKERN * (h / length) ** 2)
-
-
-def mle_objective(omega: Arr, Y: Arr) -> float:
-    sign, logdet = np.linalg.slogdet(omega)
-    if sign <= 0:
-        return float("nan")
-    return float(logdet + np.trace(np.linalg.solve(omega, Y)))
 
 
 SOLVERS: Dict[str, Dict[str, Any]] = {
@@ -142,16 +66,6 @@ SOLVERS: Dict[str, Dict[str, Any]] = {
 }
 
 POLY_SOLVERS = ["LSQ-QMI", "LSQ-opt", "MLE"]
-
-
-def build_problems(site: Arr, N: int = 3000) -> Dict[str, Arr]:
-    out: Dict[str, Arr] = {}
-    for name, (length_x, length_y) in PROBLEM_SPECS.items():
-        if length_x == length_y:
-            out[name] = create_2d_isotropic(site, N)
-        else:
-            out[name] = create_2d_anisotropic(site, length_x, length_y, N)
-    return out
 
 
 def run_solver(

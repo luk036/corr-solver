@@ -1,5 +1,7 @@
 """Generate the SVG figures for the LSQ-vs-MLE slide deck."""
 
+import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -14,26 +16,28 @@ from ellalgo.ell import Ell  # noqa: E402
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from cccp_mle import cccp_mle_oracle, mle_obj  # noqa: E402
-from cccp_mle import omega_of as cccp_omega  # noqa: E402
-from lsq_vs_mle import (  # noqa: E402
-    POLY_SOLVERS,
+from common import (  # noqa: E402
     PROBLEM_SPECS,
-    SOLVERS,
     build_problems,
-    run_solver,
     true_covariance,
     true_kernel,
 )
+from lsq_vs_mle import POLY_SOLVERS, SOLVERS, run_solver  # noqa: E402
 
+from corr_solver.cccp_mle_oracle import cccp_mle_oracle  # noqa: E402
 from corr_solver.corr_oracle import (  # noqa: E402
     construct_distance_matrix,
     construct_poly_matrix,
     create_2d_sites,
 )
+from corr_solver.math_utils import mle_obj, omega_of  # noqa: E402
 
-OUT = Path("D:/github/luk036.github.io/cvx/lsq-vs-mle-remark.files")
-OUT.mkdir(parents=True, exist_ok=True)
+DEFAULT_OUT = Path(
+    os.environ.get(
+        "CORR_SOLVER_FIGS_DIR",
+        "D:/github/luk036.github.io/cvx/lsq-vs-mle-remark.files",
+    )
+)
 
 C = {
     "red": "#bf616a",
@@ -52,7 +56,7 @@ plt.rcParams.update(
 )
 
 
-def fig_corr(site, problems, rows):
+def fig_corr(site, problems, rows, out: Path):
     D = construct_distance_matrix(site)
     iu = np.triu_indices_from(D)
     ds = D[iu]
@@ -91,11 +95,11 @@ def fig_corr(site, problems, rows):
         ax.legend(fontsize=8)
         ax.grid(True, alpha=0.25)
     fig.tight_layout()
-    fig.savefig(OUT / "fig_corr.svg", format="svg")
+    fig.savefig(out / "fig_corr.svg", format="svg")
     plt.close(fig)
 
 
-def fig_metrics(rows):
+def fig_metrics(rows, out: Path):
     solvers = list(dict.fromkeys(r["solver"] for r in rows))
     problems = list(dict.fromkeys(r["problem"] for r in rows))
     palette = [C["red"], C["blue"], C["green"], C["yellow"], C["purple"]]
@@ -132,11 +136,11 @@ def fig_metrics(rows):
         ax.grid(True, axis="y", alpha=0.25)
     axes[0].legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(OUT / "fig_metrics.svg", format="svg")
+    fig.savefig(out / "fig_metrics.svg", format="svg")
     plt.close(fig)
 
 
-def fig_nonconvex(Y):
+def fig_nonconvex(Y, out: Path):
     n = Y.shape[0]
     t = np.linspace(0.4, 4.0, 500)
     f2 = n * (2.0 - t) / t**3
@@ -164,7 +168,7 @@ def fig_nonconvex(Y):
     ax.legend(fontsize=10)
     ax.grid(True, alpha=0.25)
     fig.tight_layout()
-    fig.savefig(OUT / "fig_nonconvex.svg", format="svg")
+    fig.savefig(out / "fig_nonconvex.svg", format="svg")
     plt.close(fig)
 
 
@@ -173,7 +177,7 @@ def cccp_history(Y, site, m, x0, n_outer=30):
     x = np.array(x0, dtype=float)
     hist = [mle_obj(x, Sig, Y)]
     for _ in range(n_outer):
-        M = np.linalg.inv(cccp_omega(x, Sig))
+        M = np.linalg.inv(omega_of(x, Sig))
         oracle = cccp_mle_oracle(Sig, Y, M)
         x_new, _, _ = cutting_plane_optim(oracle, Ell(100.0, x), float("inf"))
         if x_new is None:
@@ -185,7 +189,7 @@ def cccp_history(Y, site, m, x0, n_outer=30):
     return x, hist
 
 
-def fig_cccp(Y, site, m, x_lsq, x_mle):
+def fig_cccp(Y, site, m, x_lsq, x_mle, out: Path):
     Sig = construct_poly_matrix(site, m)
     D = construct_distance_matrix(site)
     true = 4.0 * np.exp(-0.12 * D**2)
@@ -234,11 +238,23 @@ def fig_cccp(Y, site, m, x_lsq, x_mle):
     ax2.set_title("CCP removes the 2Y-induced bias", color=C["dark"])
     ax2.grid(True, axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(OUT / "fig_cccp.svg", format="svg")
+    fig.savefig(out / "fig_cccp.svg", format="svg")
     plt.close(fig)
 
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=DEFAULT_OUT,
+        help="directory to write the SVG figures into",
+    )
+    return parser.parse_args(argv)
+
+
+def main(out: Path):
+    out.mkdir(parents=True, exist_ok=True)
     site = create_2d_sites(5, 4)
     m = 4
     problems = build_problems(site)
@@ -261,12 +277,12 @@ def main():
         if r["solver"] == "MLE" and r["problem"] == "iso (1,1)"
     )
 
-    fig_corr(site, problems, rows)
-    fig_metrics(rows)
-    fig_nonconvex(iso_Y)
-    fig_cccp(iso_Y, site, m, np.asarray(x_lsq.c)[::-1], np.asarray(x_mle.c)[::-1])
-    print("wrote:", *sorted(p.name for p in OUT.glob("fig_*.svg")))
+    fig_corr(site, problems, rows, out)
+    fig_metrics(rows, out)
+    fig_nonconvex(iso_Y, out)
+    fig_cccp(iso_Y, site, m, np.asarray(x_lsq.c)[::-1], np.asarray(x_mle.c)[::-1], out)
+    print("wrote:", *sorted(p.name for p in out.glob("fig_*.svg")))
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_args().out)

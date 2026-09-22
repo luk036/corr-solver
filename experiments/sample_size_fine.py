@@ -1,5 +1,7 @@
 """Fine sample-size sweep (N = 1..200) for LSQ, MLE(2Y), and CCP."""
 
+import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -12,12 +14,13 @@ import matplotlib.pyplot as plt  # noqa: E402
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from cccp_mle import mle_obj  # noqa: E402
+from common import cccp_run, make_Y, true_covariance  # noqa: E402
+
 from corr_solver.corr_oracle import construct_poly_matrix, create_2d_sites  # noqa: E402
 from corr_solver.lsq_corr_oracle import lsq_oracle  # noqa: E402
+from corr_solver.math_utils import mle_obj  # noqa: E402
 from corr_solver.mle_corr_oracle import mle_oracle  # noqa: E402
-from lsq_vs_mle import lsq_corr_core2, mle_corr_core, true_covariance  # noqa: E402
-from sample_size_study import cccp_run, make_Y  # noqa: E402
+from corr_solver.solvers import lsq_corr_core2, mle_corr_core  # noqa: E402
 
 NS = list(range(1, 21)) + [25, 30, 35, 40, 50, 60, 80, 100, 120, 150, 200]
 PROBLEMS = [("iso (1,1)", 1.0, 1.0), ("aniso (1,3)", 1.0, 3.0)]
@@ -84,7 +87,23 @@ def sweep(site, m, lx, ly):
     return rows
 
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path(
+            os.environ.get(
+                "CORR_SOLVER_FIGS_DIR",
+                "D:/github/luk036.github.io/cvx/lsq-vs-mle-remark.files",
+            )
+        ),
+        help="directory to write the SVG figures into",
+    )
+    return parser.parse_args(argv)
+
+
+def main(out: Path):
     site = create_2d_sites(5, 4)
     m = 4
     results = {}
@@ -92,7 +111,6 @@ def main():
         print(f"\n=== {name} ===")
         results[name] = sweep(site, m, lx, ly)
 
-    out = Path("D:/github/luk036.github.io/cvx/lsq-vs-mle-remark.files")
     out.mkdir(parents=True, exist_ok=True)
     fig, axes = plt.subplots(2, 4, figsize=(20, 8.4))
     for row, (name, _, _) in enumerate(PROBLEMS):
@@ -154,4 +172,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_args().out)

@@ -1,5 +1,7 @@
 """Sample-size study: how N affects LSQ, MLE(2Y), and CCP (isotropic + anisotropic)."""
 
+import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -8,58 +10,21 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from ellalgo.cutting_plane import cutting_plane_optim  # noqa: E402
-from ellalgo.ell import Ell  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from cccp_mle import cccp_mle_oracle, mle_obj  # noqa: E402
-from cccp_mle import omega_of as om  # noqa: E402
-from lsq_vs_mle import (  # noqa: E402
-    create_2d_anisotropic,
-    lsq_corr_core2,
-    mle_corr_core,
-    true_covariance,
-)
+from common import cccp_run, make_Y, true_covariance  # noqa: E402
 
-from corr_solver.corr_oracle import (  # noqa: E402
-    construct_poly_matrix,
-    create_2d_isotropic,
-    create_2d_sites,
-)
+from corr_solver.corr_oracle import construct_poly_matrix, create_2d_sites  # noqa: E402
 from corr_solver.lsq_corr_oracle import lsq_oracle  # noqa: E402
+from corr_solver.math_utils import mle_obj, omega_of  # noqa: E402
 from corr_solver.mle_corr_oracle import mle_oracle  # noqa: E402
+from corr_solver.solvers import lsq_corr_core2, mle_corr_core  # noqa: E402
 
 NS = [5, 10, 15, 20, 30, 50, 100, 200, 500, 1000, 2000]
 PROBLEMS = [("iso (1,1)", 1.0, 1.0), ("aniso (1,3)", 1.0, 3.0)]
 COLORS = {"LSQ": "#5e81ac", "MLE": "#bf616a", "CCP": "#a3be8c"}
-
-
-def make_Y(site, lx, ly, N):
-    if lx == ly:
-        return create_2d_isotropic(site, N)
-    return create_2d_anisotropic(site, lx, ly, N)
-
-
-def cccp_run(Y, site, m, x0, n_outer=15):
-    Sig = construct_poly_matrix(site, m)
-    x = np.array(x0, dtype=float)
-    f_old = np.inf
-    total = 0
-    for _ in range(n_outer):
-        M = np.linalg.inv(om(x, Sig))
-        oracle = cccp_mle_oracle(Sig, Y, M)
-        x_new, _, it = cutting_plane_optim(oracle, Ell(100.0, x), float("inf"))
-        total += it
-        if x_new is None:
-            return None, total
-        f_new = mle_obj(x_new, Sig, Y)
-        if abs(f_old - f_new) < 1e-8:
-            return x_new, total
-        f_old = f_new
-        x = x_new
-    return x, total
 
 
 def sweep(site, m, lx, ly):
@@ -73,7 +38,7 @@ def sweep(site, m, lx, ly):
         def metrics(x, feasible):
             if x is None or not feasible:
                 return dict(relT=np.nan, margin=np.nan, obj=np.nan)
-            Om = om(x, Sig)
+            Om = omega_of(x, Sig)
             return dict(
                 relT=float(np.linalg.norm(true - Om, "fro") / normT),
                 margin=float(np.linalg.eigvalsh(2 * Y - Om).min()),
@@ -110,7 +75,23 @@ def sweep(site, m, lx, ly):
     return rows
 
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=Path(
+            os.environ.get(
+                "CORR_SOLVER_FIGS_DIR",
+                "D:/github/luk036.github.io/cvx/lsq-vs-mle-remark.files",
+            )
+        ),
+        help="directory to write the SVG figures into",
+    )
+    return parser.parse_args(argv)
+
+
+def main(out: Path):
     site = create_2d_sites(5, 4)
     m = 4
     results = {}
@@ -118,7 +99,6 @@ def main():
         print(f"\n=== {name} ===")
         results[name] = sweep(site, m, lx, ly)
 
-    out = Path("D:/github/luk036.github.io/cvx/lsq-vs-mle-remark.files")
     out.mkdir(parents=True, exist_ok=True)
     fig, axes = plt.subplots(2, 3, figsize=(16, 8.2))
     for row, (name, _, _) in enumerate(PROBLEMS):
@@ -155,4 +135,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(parse_args().out)

@@ -17,6 +17,8 @@ from sklearn.gaussian_process.kernels import (
     WhiteKernel,
 )
 
+from corr_solver import kernels
+
 try:
     import matplotlib.pyplot as plt
 
@@ -35,25 +37,21 @@ def sample_2d_grid(nx: int = 10, ny: int = 8) -> np.ndarray:
     return np.column_stack([xx.ravel(), yy.ravel()])
 
 
-def _matern_kernel(r, sigma, nu):
-    if nu == 0.5:
-        return sigma**2 * np.exp(-r)
-    r3 = np.sqrt(3) * r if nu == 1.5 else np.sqrt(5) * r
-    logv = np.log1p(r3) - r3 if nu == 1.5 else np.log1p(r3 + r3**2 / 3) - r3
-    return np.where(r < 50, sigma**2 * np.exp(logv), 0.0)
+_KERNEL_RATE = {"exponential": 1.0, "matern32": np.sqrt(3.0), "matern52": np.sqrt(5.0)}
 
 
 def _eval_kernel(r2, kernel_type, sigma):
-    r = np.sqrt(r2 + 1e-12)
     if kernel_type == "gaussian":
-        return sigma**2 * np.exp(-0.5 * r2)
+        return sigma**2 * kernels.gaussian(r2, 0.5)
+    if kernel_type not in _KERNEL_RATE:
+        raise ValueError(f"unknown kernel: {kernel_type}")
+    r = np.sqrt(r2 + 1e-12)
+    profile = sigma**2 * kernels.KERNELS[kernel_type](
+        r2 + 1e-12, _KERNEL_RATE[kernel_type]
+    )
     if kernel_type == "exponential":
-        return _matern_kernel(r, sigma, 0.5)
-    if kernel_type == "matern32":
-        return _matern_kernel(r, sigma, 1.5)
-    if kernel_type == "matern52":
-        return _matern_kernel(r, sigma, 2.5)
-    raise ValueError(f"unknown kernel: {kernel_type}")
+        return profile
+    return np.where(r < 50, profile, 0.0)
 
 
 def _extract_lengths(p, key="k1__k2__length_scale", fallback="k1__length_scale"):
