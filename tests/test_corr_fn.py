@@ -1,50 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any, Tuple
-
 import numpy as np
-from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
-from ellalgo.ell import Ell
-from ellalgo.ell_typing import OracleFeas, OracleOptim
 from pytest import approx
 
-from corr_solver.corr_oracle import corr_poly, create_2d_isotropic, create_2d_sites
+from corr_solver.corr_oracle import corr_poly
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.qmi_oracle import QMIOracle
-
-site = create_2d_sites(5, 4)
-Y = create_2d_isotropic(site, 3000)
+from corr_solver.solvers import lsq_corr_core, lsq_corr_core2, mle_corr_core
 
 
-def lsq_corr_core2(
-    Y: np.ndarray, n: int, omega: OracleOptim[np.ndarray]
-) -> Tuple[np.ndarray, int, bool]:
-    """[summary]
-
-    Arguments:
-        Y ([type]): [description]
-        n ([type]): [description]
-        omega ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    normY = np.linalg.norm(Y, "fro")
-    normY2 = 32 * normY * normY
-    val = 256 * np.ones(n + 1)
-    val[-1] = normY2 * normY2
-    x = np.zeros(n + 1)  # cannot all zeros
-    x[0] = 1.0
-    x[-1] = normY2 / 2
-    ellip = Ell(val, x)
-    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))
-    if xbest is None:
-        return np.zeros(n), num_iters, False
-    return xbest[:-1], num_iters, True
-
-
-def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
+def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int):
     """[summary]
 
     Arguments:
@@ -58,18 +24,7 @@ def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, b
     return corr_poly(Y, site, n, lsq_oracle, lsq_corr_core2)
 
 
-def lsq_corr_core(Y: np.ndarray, n: int, Q: OracleFeas) -> Tuple[Any, int, bool]:
-    x = np.zeros(n)  # cannot all zeros
-    x[0] = 1.0
-    ellip = Ell(256.0, x)
-    omega = BSearchAdaptor(Q, ellip)  # type: ignore[arg-type]
-    normY = np.linalg.norm(Y, "fro")
-    upper = normY * normY
-    t, num_iters = bsearch(omega, (0.0, upper))
-    return omega.x_best, num_iters, t != upper
-
-
-def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
+def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
     """[summary]
 
     Arguments:
@@ -83,30 +38,7 @@ def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bo
     return corr_poly(Y, site, n, QMIOracle, lsq_corr_core)
 
 
-def mle_corr_core(
-    _: np.ndarray, n: int, omega: OracleOptim[np.ndarray]
-) -> Tuple[Any, int, bool]:
-    """[summary]
-
-    Arguments:
-        Y ([type]): [description]
-        n ([type]): [description]
-        omega ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    x = np.zeros(n)
-    x[0] = 1.0
-    ellip = Ell(50.0, x)
-    # options = Options()
-    # options.max_iters = 2000
-    # options.tol = 1e-8
-    xbest, _, num_iters = cutting_plane_optim(omega, ellip, float("inf"))  # type: ignore[assignment]
-    return xbest, num_iters, xbest is not None
-
-
-def mle_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bool]:
+def mle_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
     """[summary]
 
     Arguments:
@@ -121,12 +53,12 @@ def mle_corr_poly(Y: np.ndarray, site: np.ndarray, n: int) -> Tuple[Any, int, bo
     return corr_poly(Y, site, n, mle_oracle, mle_corr_core)
 
 
-def test_data() -> None:
+def test_data(site: np.ndarray) -> None:
     """[summary]"""
     assert site[6, 0] == approx(8.75)
 
 
-def test_lsq_corr_poly() -> None:
+def test_lsq_corr_poly(site: np.ndarray, Y: np.ndarray) -> None:
     _, num_iters, feasible = lsq_corr_poly(Y, site, 4)
     assert feasible
     # A bisection at float precision needs ~62 steps here. The bound is tight
@@ -136,13 +68,13 @@ def test_lsq_corr_poly() -> None:
     assert num_iters <= 100
 
 
-def test_lsq_corr_poly2() -> None:
+def test_lsq_corr_poly2(site: np.ndarray, Y: np.ndarray) -> None:
     _, num_iters, feasible = lsq_corr_poly2(Y, site, 4)
     assert feasible
     assert num_iters <= 1095
 
 
-# def test_mle_corr_poly() -> None:
+# def test_mle_corr_poly(site: np.ndarray, Y: np.ndarray) -> None:
 #     _, num_iters, feasible = mle_corr_poly(Y, site, 4)
 #     assert feasible
 #     assert num_iters <= 255

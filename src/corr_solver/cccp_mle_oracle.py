@@ -20,8 +20,8 @@ from ellalgo.cutting_plane import cutting_plane_optim
 from ellalgo.ell import Ell
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 
-Arr = np.ndarray
-Cut = Tuple[Arr, float]
+from .math_utils import inverse_sqrt_gram, mle_obj, omega_of
+from .types import Arr, Cut
 
 
 class cccp_mle_oracle:
@@ -49,9 +49,7 @@ class cccp_mle_oracle:
         if cut := self.lmi0.assess_feas(x):
             return cut, None
         R = self.lmi0.ldlt_mgr.sqrt()
-        invR = np.linalg.inv(R)
-        S = invR @ invR.T
-        SY = S @ self.Y
+        S, SY = inverse_sqrt_gram(R, self.Y)
         h = float(np.trace(SY)) + float(x @ self.mk)
         g = np.empty(len(x))
         for i in range(len(x)):
@@ -59,29 +57,6 @@ class cccp_mle_oracle:
         if (f := h - t) >= 0:
             return (g, f), None
         return (g, 0.0), h
-
-
-def omega_of(x: Arr, Sigma: List[Arr]) -> Arr:
-    """Return ``Omega(x) = sum_i x_i Sigma_i``.
-
-    :param x: coefficient vector
-    :param Sigma: basis matrices
-    :return: the assembled matrix
-    """
-    return sum(c * F for c, F in zip(x, Sigma))
-
-
-def mle_obj(x: Arr, Sigma: List[Arr], Y: Arr) -> float:
-    """Return ``log det Omega(x) + Tr(Omega(x)^-1 Y)``, or ``inf`` if not positive definite.
-
-    :param x: coefficient vector
-    :param Sigma: basis matrices
-    :param Y: biased sample covariance matrix
-    :return: the MLE objective value
-    """
-    Om = omega_of(x, Sigma)
-    sign, logdet = np.linalg.slogdet(Om)
-    return np.inf if sign <= 0 else float(logdet + np.trace(np.linalg.solve(Om, Y)))
 
 
 def cccp_mle(

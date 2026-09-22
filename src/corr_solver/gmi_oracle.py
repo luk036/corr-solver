@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 from ellalgo.oracles.ldlt_mgr import LDLTMgr
 
-Cut = Tuple[np.ndarray, float]
+from .types import Cut
 
 
 # The `GMIOracle` class is an oracle for a General Matrix Inequality constraint, which evaluates the

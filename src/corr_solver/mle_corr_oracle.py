@@ -21,7 +21,8 @@ import numpy as np
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 from ellalgo.oracles.lmi_oracle import LMIOracle
 
-Cut = Tuple[np.ndarray, float]
+from .math_utils import mle_value_and_grad
+from .types import Cut
 
 
 # The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
@@ -62,20 +63,7 @@ class mle_oracle:
             return cut, None
 
         R = self.lmi0.ldlt_mgr.sqrt()
-        invR = np.linalg.inv(R)
-        S = invR @ invR.T
-        SY = S @ self.Y
-        diag = np.diag(R)
-        f1 = 2 * np.sum(np.log(diag)) + np.trace(SY)
-
-        n = len(x)
-        g = np.zeros(n)
-        # g[i] = tr(S @ Sigma[i]) - tr(S @ Sigma[i] @ SY)
-        #      = tr((S - SY @ S) @ Sigma[i])      [cyclic perm of trace]
-        #      = sum((S - SY @ S).T * Sigma[i])    [Frobenius inner prod]
-        V = S - SY @ S  # pre-compute once, n×n
-        for i in range(n):
-            g[i] = np.sum(V.T * self.Sigma[i])
+        f1, g = mle_value_and_grad(R, self.Y, self.Sigma)
 
         if (f := f1 - t) >= 0:
             return (g, f), None

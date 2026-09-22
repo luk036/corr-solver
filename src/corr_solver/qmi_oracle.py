@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional
 
 import numpy as np
 
 from .gmi_oracle import GMIOracle
-
-Arr = Union[np.ndarray]
-Cut = Tuple[Arr, float]
+from .types import Arr, Cut
 
 
 class QMIOracle:

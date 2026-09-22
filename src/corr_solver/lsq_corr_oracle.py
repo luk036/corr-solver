@@ -8,15 +8,13 @@ then the ``qmi`` oracle for the quadratic-matrix-inequality reformulation;
 optimality is assessed against the best-so-far value ``t``.
 """
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import numpy as np
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 
 from .qmi_oracle import QMIOracle
-
-Arr = Union[np.ndarray]
-Cut = Tuple[Arr, float]
+from .types import Arr, Cut
 
 
 #    min   ‖ F0 − F(x) ‖

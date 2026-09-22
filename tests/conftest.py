@@ -1,10 +1,20 @@
 """
-Dummy conftest.py for corr-solver.
-
-If you don't know what this is for, just leave it empty.
-Read more about conftest.py under:
-- https://docs.pytest.org/en/stable/fixture.html
-- https://docs.pytest.org/en/stable/writing_plugins.html
+Shared pytest fixtures for corr-solver.
 """
 
-# import pytest
+import numpy as np
+import pytest
+
+from corr_solver.corr_oracle import create_2d_isotropic, create_2d_sites
+
+
+@pytest.fixture(scope="session")
+def site() -> np.ndarray:
+    """[summary]"""
+    return create_2d_sites(5, 4)
+
+
+@pytest.fixture(scope="session")
+def Y(site: np.ndarray) -> np.ndarray:
+    """[summary]"""
+    return create_2d_isotropic(site, 3000)

@@ -32,8 +32,8 @@ from typing import Any, List, Optional, Tuple
 import numpy as np
 from numba import njit
 
-Arr = np.ndarray
-Cut = Tuple[Arr, float]
+from .math_utils import mle_value_and_grad
+from .types import Arr, Cut
 
 
 @njit(cache=True, fastmath=False)
@@ -395,14 +395,31 @@ class NumbaMleOracle:
         if cut is not None:
             return cut, None
         R = self.lmi0.sqrt()
-        invR = np.linalg.inv(R)
-        S = invR @ invR.T
-        SY = S @ self.Y
-        f1 = 2 * np.sum(np.log(np.diag(R))) + np.trace(SY)
-        g: Any = np.empty(len(x))
-        V = S - SY @ S
-        for i in range(len(x)):
-            g[i] = np.sum(V.T * self.Sigma[i])
+        f1, g = mle_value_and_grad(R, self.Y, self.Sigma)
         if (f := f1 - t) >= 0:
             return (g, f), None
         return (g, 0.0), f1
+
+
+class NumbaBackend:
+    """Numba-compiled oracle family, mirroring ``PurePythonBackend``."""
+
+    def lmi0(self, mat_f: List[Arr]) -> Any:
+        """Return an oracle for ``sum_k F_k x_k >= 0``."""
+        return NumbaLMI0Oracle(mat_f)
+
+    def lmi(self, mat_f: List[Arr], mat_b: Arr) -> Any:
+        """Return an oracle for ``F0 - sum_k F_k x_k >= 0``."""
+        return NumbaLMIOracle(mat_f, mat_b)
+
+    def qmi(self, F: List[Arr], F0: Arr) -> Any:
+        """Return a quadratic-matrix-inequality oracle."""
+        return NumbaQMIOracle(F, F0)
+
+    def lsq(self, F: List[Arr], F0: Arr) -> Any:
+        """Return a least-squares optimization oracle."""
+        return NumbaLsqOracle(F, F0)
+
+    def mle(self, Sigma: List[Arr], Y: Arr) -> Any:
+        """Return a maximum-likelihood optimization oracle."""
+        return NumbaMleOracle(Sigma, Y)
