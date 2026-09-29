@@ -12,6 +12,7 @@ from typing import Any
 
 from .basis import (
     BSplineBasis,
+    MonotoneDecreasingOracle,
     fit,
     generate_bspline_info,
     mono_decreasing_oracle2,
@@ -24,6 +25,7 @@ __all__ = [
     "generate_bspline_info",
     "mono_oracle",
     "mono_decreasing_oracle2",
+    "MonotoneDecreasingOracle",
 ]
 
 

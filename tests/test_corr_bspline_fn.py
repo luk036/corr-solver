@@ -5,7 +5,11 @@ from typing import Any
 import numpy as np
 import pytest
 
-from corr_solver.corr_bspline_oracle import corr_bspline, generate_bspline_info
+from corr_solver.corr_bspline_oracle import (
+    MonotoneDecreasingOracle,
+    corr_bspline,
+    generate_bspline_info,
+)
 from corr_solver.corr_oracle import construct_distance_matrix, construct_poly_matrix
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
@@ -82,3 +86,36 @@ def test_bspline_fit_is_monotone_decaying(site: np.ndarray, Y: np.ndarray) -> No
 def test_bspline_rejects_too_few_control_points(site: np.ndarray) -> None:
     with pytest.raises(ValueError):
         generate_bspline_info(site, 2)
+
+
+class _FeasibleSink:
+    """Trivial feasibility oracle that records the last best-so-far value."""
+
+    def __init__(self) -> None:
+        self.t = None
+
+    def update(self, t: float) -> None:
+        self.t = t
+
+    def assess_feas(self, x: np.ndarray):
+        return None
+
+
+def test_monotone_oracle_assess_feas_passes_through() -> None:
+    oracle = MonotoneDecreasingOracle(_FeasibleSink())
+    assert oracle.assess_feas(np.array([3.0, 2.0, 1.0])) is None
+    cut = oracle.assess_feas(np.array([1.0, 3.0, 2.0]))
+    assert cut is not None
+    assert cut[1] == pytest.approx(2.0)
+
+
+def test_monotone_oracle_assess_feas_honours_n_coeff() -> None:
+    x = np.array([3.0, 2.0, 5.0])
+    assert MonotoneDecreasingOracle(_FeasibleSink(), n_coeff=2).assess_feas(x) is None
+    assert MonotoneDecreasingOracle(_FeasibleSink()).assess_feas(x) is not None
+
+
+def test_monotone_oracle_forwards_update() -> None:
+    sink = _FeasibleSink()
+    MonotoneDecreasingOracle(sink).update(3.5)
+    assert sink.t == 3.5
