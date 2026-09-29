@@ -10,7 +10,7 @@ difference is encapsulated by the :class:`Layout` strategies, so the cores no
 longer guess dimensions or hardcode the initial ellipsoid values.
 """
 
-from typing import Any, Optional, Protocol, Tuple
+from typing import Any, Optional, Protocol, Tuple, Union
 
 import numpy as np
 from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
@@ -22,7 +22,7 @@ from .types import Arr
 class Layout(Protocol):
     """Strategy describing the solver's variable vector."""
 
-    def initial(self, Y: Arr, n: int) -> Tuple[Any, Arr]:
+    def initial(self, Y: Arr, n: int) -> Tuple[Union[float, Arr], Arr]:
         """Return the initial ellipsoid value and point."""
         ...
 
@@ -34,7 +34,7 @@ class Layout(Protocol):
 class MleLayout:
     """Plain coefficient vector of length ``n`` (maximum-likelihood)."""
 
-    def initial(self, Y: Arr, n: int) -> Tuple[Any, Arr]:
+    def initial(self, Y: Arr, n: int) -> Tuple[Union[float, Arr], Arr]:
         """Return a scalar ellipsoid value and a plain coefficient vector."""
         x = np.zeros(n)
         x[0] = 1.0
@@ -48,7 +48,7 @@ class MleLayout:
 class LSQBsearchLayout:
     """Plain coefficient vector of length ``n`` (least-squares feasibility)."""
 
-    def initial(self, Y: Arr, n: int) -> Tuple[Any, Arr]:
+    def initial(self, Y: Arr, n: int) -> Tuple[Union[float, Arr], Arr]:
         """Return a scalar ellipsoid value and a plain coefficient vector."""
         x = np.zeros(n)
         x[0] = 1.0
@@ -62,7 +62,7 @@ class LSQBsearchLayout:
 class LSQAugmentedLayout:
     """Augmented ``(coeffs..., t)`` of length ``n + 1`` (least-squares optimization)."""
 
-    def initial(self, Y: Arr, n: int) -> Tuple[Any, Arr]:
+    def initial(self, Y: Arr, n: int) -> Tuple[Union[float, Arr], Arr]:
         """Return a per-variable ellipsoid value and an augmented point."""
         normY = np.linalg.norm(Y, "fro")
         normY2 = 32 * normY * normY
