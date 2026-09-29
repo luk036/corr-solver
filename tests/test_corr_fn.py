@@ -3,7 +3,11 @@
 import numpy as np
 from pytest import approx
 
-from corr_solver.corr_oracle import corr_poly
+from corr_solver.corr_oracle import (
+    corr_poly,
+    create_2d_anisotropic,
+    create_2d_isotropic,
+)
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.qmi_oracle import QMIOracle
@@ -72,6 +76,22 @@ def test_lsq_corr_poly2(site: np.ndarray, Y: np.ndarray) -> None:
     _, num_iters, feasible = lsq_corr_poly2(Y, site, 4)
     assert feasible
     assert num_iters <= 1095
+
+
+def test_create_2d_isotropic_is_reproducible(site: np.ndarray) -> None:
+    assert create_2d_isotropic(site, N=50) == approx(create_2d_isotropic(site, N=50))
+
+
+def test_create_2d_isotropic_accepts_kernel_and_rng(site: np.ndarray) -> None:
+    rng = np.random.RandomState(0)
+    Y = create_2d_isotropic(site, N=50, rng=rng, kernel="matern32", rate=0.1)
+    assert Y.shape == (site.shape[0], site.shape[0])
+
+
+def test_create_2d_anisotropic_is_symmetric(site: np.ndarray) -> None:
+    Y = create_2d_anisotropic(site, 1.0, 3.0, N=100)
+    assert Y.shape == (site.shape[0], site.shape[0])
+    assert Y == approx(Y.T)
 
 
 # def test_mle_corr_poly(site: np.ndarray, Y: np.ndarray) -> None:

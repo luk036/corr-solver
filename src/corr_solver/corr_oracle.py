@@ -26,12 +26,13 @@ from .basis import (
     construct_poly_matrix,
     fit,
 )
-from .kernels import gaussian
+from .kernels import KERNELS
 from .types import Arr, FitResult
 
 __all__ = [
     "create_2d_sites",
     "create_2d_isotropic",
+    "create_2d_anisotropic",
     "construct_distance_matrix",
     "construct_poly_matrix",
     "corr_poly",
@@ -55,45 +56,75 @@ def create_2d_sites(nx: int = 10, ny: int = 8) -> Arr:
     return site
 
 
-def create_2d_isotropic(site: Arr, N: int = 3000, rng: Any = None) -> Arr:
-    """
-    The function `create_2d_isotropic` generates a biased covariance matrix for a 2D isotropic object
-    based on the location of sites.
-
-    :param site: The parameter `site` is the location of sites. It is expected to be a 2D array where each row
-        represents the coordinates of a site
-    :type site: Arr
-    :param N: The parameter N represents the number of iterations or samples used to create the 2D
-        isotropic object. It determines the number of times the loop runs to generate random values and
-        calculate the outer product. The larger the value of N, the more accurate the estimation of the
-        biased covariance matrix will be,, defaults to 3000 (optional)
-    :param rng: optional random source; defaults to ``RandomState(5)`` for
-        reproducible output
-    :return: The function `create_2d_isotropic` returns a biased covariance matrix `Y`.
-    """
-    n = site.shape[0]
-    sdkern = 0.12  # width of kernel
-    var = 2.0  # standard derivation
-    tau = 0.00001  # standard derivation of white noise
-    if rng is None:
-        rng = np.random.RandomState(5)
-
-    # Vectorized covariance construction via pairwise squared distances
-    dist_sq = squareform(pdist(site, "sqeuclidean"))
-    Sigma = gaussian(dist_sq, sdkern)
-
+def _sample_covariance(Sigma: Arr, N: int, rng: Any, var: float, tau: float) -> Arr:
+    """Average ``N`` draws of ``y y^T`` with ``y ~ N(0, var^2 Sigma + tau^2 I)``."""
+    n = Sigma.shape[0]
     A = np.linalg.cholesky(Sigma)
     Y = np.zeros((n, n))
     outer_buf = np.empty((n, n))
-
     for _ in range(N):
         x = var * rng.randn(n)
         y = A @ x + tau * rng.randn(n)
         np.outer(y, y, out=outer_buf)
         Y += outer_buf
-
     Y /= N
     return Y
+
+
+def create_2d_isotropic(
+    site: Arr,
+    N: int = 3000,
+    rng: Any = None,
+    kernel: str = "gaussian",
+    rate: float = 0.12,
+) -> Arr:
+    """
+    The function `create_2d_isotropic` generates a biased covariance matrix for a 2D isotropic object
+    based on the location of sites.
+
+    :param site: site locations, one row per site
+    :type site: Arr
+    :param N: number of samples averaged to estimate the covariance, defaults to 3000
+    :param rng: optional random source; defaults to ``RandomState(5)`` for
+        reproducible output
+    :param kernel: a key of :data:`corr_solver.kernels.KERNELS`
+    :param rate: the kernel rate / inverse length scale
+    :return: a biased sample covariance matrix `Y`.
+    """
+    if rng is None:
+        rng = np.random.RandomState(5)
+    dist_sq = squareform(pdist(site, "sqeuclidean"))
+    Sigma = KERNELS[kernel](dist_sq, rate)
+    return _sample_covariance(Sigma, N, rng, var=2.0, tau=0.00001)
+
+
+def create_2d_anisotropic(
+    site: Arr,
+    length_x: float,
+    length_y: float,
+    N: int = 3000,
+    rng: Any = None,
+    kernel: str = "gaussian",
+    rate: float = 0.12,
+) -> Arr:
+    """Biased sample covariance from a kernel with per-axis length scales.
+
+    :param site: site locations, one row per site
+    :param length_x: length scale along the first coordinate
+    :param length_y: length scale along the second coordinate
+    :param N: number of samples averaged to estimate the covariance
+    :param rng: optional random source; defaults to ``RandomState(5)``
+    :param kernel: a key of :data:`corr_solver.kernels.KERNELS`
+    :param rate: the kernel rate / inverse length scale
+    :return: a biased sample covariance matrix `Y`.
+    """
+    if rng is None:
+        rng = np.random.RandomState(5)
+    dx = site[:, None, 0] - site[None, :, 0]
+    dy = site[:, None, 1] - site[None, :, 1]
+    dist_sq = (dx / length_x) ** 2 + (dy / length_y) ** 2
+    Sigma = KERNELS[kernel](dist_sq, rate)
+    return _sample_covariance(Sigma, N, rng, var=2.0, tau=0.00001)
 
 
 def corr_poly(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> FitResult:

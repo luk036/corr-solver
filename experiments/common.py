@@ -10,7 +10,11 @@ from ellalgo.cutting_plane import cutting_plane_optim
 from ellalgo.ell import Ell
 
 from corr_solver.cccp_mle_oracle import cccp_mle_oracle
-from corr_solver.corr_oracle import construct_poly_matrix, create_2d_isotropic
+from corr_solver.corr_oracle import (
+    construct_poly_matrix,
+    create_2d_anisotropic,
+    create_2d_isotropic,
+)
 from corr_solver.kernels import gaussian
 from corr_solver.math_utils import mle_obj, omega_of
 
@@ -24,29 +28,6 @@ PROBLEM_SPECS = {
     "aniso (1,3)": (1.0, 3.0),
     "aniso (3,1)": (3.0, 1.0),
 }
-
-
-def create_2d_anisotropic(
-    site, length_x, length_y, N=3000, rng=None
-):
-    """Biased sample covariance from the anisotropic Gaussian kernel."""
-    n = site.shape[0]
-    if rng is None:
-        rng = np.random.RandomState(5)
-
-    dx = site[:, None, 0] - site[None, :, 0]
-    dy = site[:, None, 1] - site[None, :, 1]
-    dist_sq = (dx / length_x) ** 2 + (dy / length_y) ** 2
-    Sigma = gaussian(dist_sq, SDKERN)
-
-    A = np.linalg.cholesky(Sigma)
-    Y = np.zeros((n, n))
-    outer_buf = np.empty((n, n))
-    for _ in range(N):
-        y = A @ (VAR * rng.randn(n)) + TAU * rng.randn(n)
-        np.outer(y, y, out=outer_buf)
-        Y += outer_buf
-    return Y / N
 
 
 def true_covariance(site, length_x, length_y):
