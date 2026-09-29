@@ -93,3 +93,6 @@ def cccp_mle(
         f_old = f_new
         x = x_new
     return x, n_outer
+
+
+CCCPMLEOracle = cccp_mle_oracle
