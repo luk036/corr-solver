@@ -5,28 +5,22 @@ Fits coefficients ``p`` of ``Omega(p)`` to a biased sample covariance matrix
 ``Y`` by minimizing ``log det Omega(p) + Tr(Omega(p)^{-1} Y)`` subject to
 ``2Y >= Omega(p) >= 0``. Feasibility is checked with the ``lmi`` and ``lmi0``
 oracles; the objective and its gradient are then compared against the
-
 best-so-far value ``t``.
-
-
-
-
-
-
 """
 
-from typing import Any, List, Optional, Tuple
-
-import numpy as np
+from typing import List, Optional, Tuple
 
 from .math_utils import mle_value_and_grad
-from .types import Cut
+from .protocols import OracleBackend
+from .types import Arr, Cut
 
 
 # The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
 # certain objective function subject to linear matrix inequality constraints.
 class mle_oracle:
-    def __init__(self, Sigma: List[np.ndarray], Y: np.ndarray, backend: Any = None):
+    def __init__(
+        self, Sigma: List[Arr], Y: Arr, backend: Optional[OracleBackend] = None
+    ):
         """Maximum likelyhood estimation:
 
         min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
@@ -43,7 +37,7 @@ class mle_oracle:
         self.lmi0 = backend.lmi0(Sigma)
         self.lmi = backend.lmi(Sigma, 2 * Y)
 
-    def assess_optim(self, x: np.ndarray, t: float) -> Tuple[Cut, Optional[float]]:
+    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """
         The `assess_optim` function assesses the feasibility and optimality of a given solution by
         calculating various values and returning a tuple of cuts and a float value.

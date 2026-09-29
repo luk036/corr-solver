@@ -86,8 +86,10 @@ class MonotoneDecreasingOracle:
 
     Wraps another oracle and prepends a cut whenever the leading control
     coefficients are not monotonically non-increasing (``x[i] >= x[i+1]``). It
-    forwards both the feasibility and the optimization interface, so it composes
-    with the bisection cores as well as the cutting-plane ones.
+    forwards the feasibility, optimization and update interfaces, so it composes
+    with the bisection cores as well as the cutting-plane ones; the wrapped
+    oracle must provide whichever of ``assess_feas``/``update`` or
+    ``assess_optim`` the chosen core drives.
 
     :param basis: the wrapped oracle
     :param n_coeff: number of leading entries of ``x`` that are control
@@ -168,7 +170,7 @@ def generate_bspline_info(site: Arr, m: int) -> Tuple[List[Arr], np.ndarray, int
     return Sigma, t, k
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class BasisModel:
     """A built basis: its matrices plus the oracle wrapper and curve factory."""
 

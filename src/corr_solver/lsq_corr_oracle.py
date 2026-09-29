@@ -8,10 +8,11 @@ then the ``qmi`` oracle for the quadratic-matrix-inequality reformulation;
 optimality is assessed against the best-so-far value ``t``.
 """
 
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
+from .protocols import OracleBackend
 from .types import Arr, Cut
 
 
@@ -41,7 +42,7 @@ class lsq_oracle:
     where ``F(x) = F[1] x[1] + ... + F[n] x[n]`` and ``{Fk}i,j = Ψk(||sj - si||)``
     """
 
-    def __init__(self, F: List[Arr], F0: Arr, backend: Any = None):
+    def __init__(self, F: List[Arr], F0: Arr, backend: Optional[OracleBackend] = None):
         if backend is None:
             from .backends import PurePythonBackend
 

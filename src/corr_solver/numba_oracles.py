@@ -27,13 +27,19 @@ count. Do not "simplify" the loops into BLAS calls without re-checking the
 iteration counts of the solver tests.
 """
 
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 from numba import njit
 
 from .lsq_corr_oracle import lsq_oracle
 from .mle_corr_oracle import mle_oracle
+from .protocols import (
+    FeasibilityOracle,
+    OptimizationOracle,
+    QuadraticOracle,
+    SqrtFeasibilityOracle,
+)
 from .types import Arr, Cut
 
 
@@ -357,22 +363,22 @@ class NumbaMleOracle(mle_oracle):
 class NumbaBackend:
     """Numba-compiled oracle family, mirroring ``PurePythonBackend``."""
 
-    def lmi0(self, mat_f: List[Arr]) -> Any:
+    def lmi0(self, mat_f: List[Arr]) -> SqrtFeasibilityOracle:
         """Return an oracle for ``sum_k F_k x_k >= 0``."""
         return NumbaLMI0Oracle(mat_f)
 
-    def lmi(self, mat_f: List[Arr], mat_b: Arr) -> Any:
+    def lmi(self, mat_f: List[Arr], mat_b: Arr) -> FeasibilityOracle:
         """Return an oracle for ``F0 - sum_k F_k x_k >= 0``."""
         return NumbaLMIOracle(mat_f, mat_b)
 
-    def qmi(self, F: List[Arr], F0: Arr) -> Any:
+    def qmi(self, F: List[Arr], F0: Arr) -> QuadraticOracle:
         """Return a quadratic-matrix-inequality oracle."""
         return NumbaQMIOracle(F, F0)
 
-    def lsq(self, F: List[Arr], F0: Arr) -> Any:
+    def lsq(self, F: List[Arr], F0: Arr) -> OptimizationOracle:
         """Return a least-squares optimization oracle."""
-        return lsq_oracle(F, F0, self)
+        return NumbaLsqOracle(F, F0)
 
-    def mle(self, Sigma: List[Arr], Y: Arr) -> Any:
+    def mle(self, Sigma: List[Arr], Y: Arr) -> OptimizationOracle:
         """Return a maximum-likelihood optimization oracle."""
-        return mle_oracle(Sigma, Y, self)
+        return NumbaMleOracle(Sigma, Y)

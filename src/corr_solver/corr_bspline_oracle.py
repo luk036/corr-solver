@@ -4,8 +4,9 @@ B-spline correlation oracle.
 Fits a smooth, monotonically decreasing B-spline curve to a biased covariance
 matrix via the quadratic B-spline basis in :mod:`corr_solver.basis`.
 
-``generate_bspline_info``, ``mono_oracle`` and ``mono_decreasing_oracle2`` live
-in :mod:`corr_solver.basis` and are re-exported here for backward compatibility.
+``generate_bspline_info``, ``mono_oracle``, ``MonotoneDecreasingOracle`` and its
+``mono_decreasing_oracle2`` alias live in :mod:`corr_solver.basis` and are
+re-exported here for backward compatibility.
 """
 
 from typing import Any

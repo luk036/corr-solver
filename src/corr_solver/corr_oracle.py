@@ -5,8 +5,9 @@ Building blocks for fitting correlation/error-correction polynomials to biased
 covariance matrices:
 
 1. ``create_2d_sites`` places sites on a 2D grid using a Halton sequence.
-2. ``create_2d_isotropic`` generates a biased sample covariance matrix from an
-   isotropic Gaussian kernel over the site distances.
+2. ``_sample_covariance`` averages Gaussian samples for a kernel matrix, and
+   ``create_2d_isotropic`` / ``create_2d_anisotropic`` build that kernel from the
+   site distances (Euclidean or per-axis scaled) via the ``KERNELS`` registry.
 3. ``corr_poly`` fits a polynomial to ``Y`` via a cutting-plane oracle and
    returns a ``poly1d`` object, the iteration count, and a feasibility flag.
 
@@ -71,6 +72,16 @@ def _sample_covariance(Sigma: Arr, N: int, rng: Any, var: float, tau: float) -> 
     return Y
 
 
+def _sample_from_dist_sq(
+    dist_sq: Arr, N: int, rng: Any, kernel: str, rate: float
+) -> Arr:
+    """Kernel the squared distances and sample a covariance from the result."""
+    if rng is None:
+        rng = np.random.RandomState(5)
+    Sigma = KERNELS[kernel](dist_sq, rate)
+    return _sample_covariance(Sigma, N, rng, var=2.0, tau=0.00001)
+
+
 def create_2d_isotropic(
     site: Arr,
     N: int = 3000,
@@ -91,11 +102,8 @@ def create_2d_isotropic(
     :param rate: the kernel rate / inverse length scale
     :return: a biased sample covariance matrix `Y`.
     """
-    if rng is None:
-        rng = np.random.RandomState(5)
     dist_sq = squareform(pdist(site, "sqeuclidean"))
-    Sigma = KERNELS[kernel](dist_sq, rate)
-    return _sample_covariance(Sigma, N, rng, var=2.0, tau=0.00001)
+    return _sample_from_dist_sq(dist_sq, N, rng, kernel, rate)
 
 
 def create_2d_anisotropic(
@@ -118,13 +126,10 @@ def create_2d_anisotropic(
     :param rate: the kernel rate / inverse length scale
     :return: a biased sample covariance matrix `Y`.
     """
-    if rng is None:
-        rng = np.random.RandomState(5)
     dx = site[:, None, 0] - site[None, :, 0]
     dy = site[:, None, 1] - site[None, :, 1]
     dist_sq = (dx / length_x) ** 2 + (dy / length_y) ** 2
-    Sigma = KERNELS[kernel](dist_sq, rate)
-    return _sample_covariance(Sigma, N, rng, var=2.0, tau=0.00001)
+    return _sample_from_dist_sq(dist_sq, N, rng, kernel, rate)
 
 
 def corr_poly(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> FitResult:
