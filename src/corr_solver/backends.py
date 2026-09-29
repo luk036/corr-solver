@@ -5,7 +5,7 @@
 and is imported lazily by :func:`make_backend`.
 """
 
-from typing import Any, List
+from typing import Any, Callable, Dict, List
 
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 from ellalgo.oracles.lmi_oracle import LMIOracle
@@ -17,12 +17,24 @@ from .qmi_oracle import QMIOracle
 from .types import Arr
 
 
+class PureLMI0Oracle(LMI0Oracle):
+    """``ellalgo``'s ``LMI0Oracle`` plus the uniform :meth:`sqrt` accessor.
+
+    ``mle_oracle`` asks every backend's ``lmi0`` for ``sqrt``; ``ellalgo`` only
+    exposes it through ``ldlt_mgr``, so this adapter levels the interface.
+    """
+
+    def sqrt(self) -> Arr:
+        """Return upper-triangular ``R`` with ``sum_k F_k x_k = R^T R``."""
+        return self.ldlt_mgr.sqrt()
+
+
 class PurePythonBackend:
     """Oracles written in pure Python (``ellalgo`` plus this package)."""
 
     def lmi0(self, F: List[Arr]) -> Any:
         """Return an oracle for ``sum_k F_k x_k >= 0``."""
-        return LMI0Oracle(F)
+        return PureLMI0Oracle(F)
 
     def lmi(self, F: List[Arr], F0: Arr) -> Any:
         """Return an oracle for ``F0 - sum_k F_k x_k >= 0``."""
@@ -34,11 +46,24 @@ class PurePythonBackend:
 
     def lsq(self, F: List[Arr], F0: Arr) -> Any:
         """Return a least-squares optimization oracle."""
-        return lsq_oracle(F, F0)
+        return lsq_oracle(F, F0, self)
 
     def mle(self, Sigma: List[Arr], Y: Arr) -> Any:
         """Return a maximum-likelihood optimization oracle."""
-        return mle_oracle(Sigma, Y)
+        return mle_oracle(Sigma, Y, self)
+
+
+def _numba_backend() -> OracleBackend:
+    """Import and construct the Numba backend lazily (optional dependency)."""
+    from .numba_oracles import NumbaBackend
+
+    return NumbaBackend()
+
+
+_BACKENDS: Dict[str, Callable[[], OracleBackend]] = {
+    "python": PurePythonBackend,
+    "numba": _numba_backend,
+}
 
 
 def make_backend(name: str = "python") -> OracleBackend:
@@ -47,10 +72,8 @@ def make_backend(name: str = "python") -> OracleBackend:
     :param name: ``"python"`` (default) or ``"numba"``
     :return: the matching backend
     """
-    if name == "python":
-        return PurePythonBackend()
-    if name == "numba":
-        from .numba_oracles import NumbaBackend
-
-        return NumbaBackend()
-    raise ValueError(f"unknown oracle backend: {name!r}")
+    try:
+        factory = _BACKENDS[name]
+    except KeyError:
+        raise ValueError(f"unknown oracle backend: {name!r}") from None
+    return factory()

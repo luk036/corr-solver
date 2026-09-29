@@ -15,11 +15,9 @@ best-so-far value ``t``.
 
 """
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
-from ellalgo.oracles.lmi0_oracle import LMI0Oracle
-from ellalgo.oracles.lmi_oracle import LMIOracle
 
 from .math_utils import mle_value_and_grad
 from .types import Cut
@@ -28,7 +26,7 @@ from .types import Cut
 # The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
 # certain objective function subject to linear matrix inequality constraints.
 class mle_oracle:
-    def __init__(self, Sigma: List[np.ndarray], Y: np.ndarray):
+    def __init__(self, Sigma: List[np.ndarray], Y: np.ndarray, backend: Any = None):
         """Maximum likelyhood estimation:
 
         min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
@@ -36,10 +34,14 @@ class mle_oracle:
 
 
         """
+        if backend is None:
+            from .backends import PurePythonBackend
+
+            backend = PurePythonBackend()
         self.Y = Y
         self.Sigma = Sigma
-        self.lmi0 = LMI0Oracle(Sigma)
-        self.lmi = LMIOracle(Sigma, 2 * Y)
+        self.lmi0 = backend.lmi0(Sigma)
+        self.lmi = backend.lmi(Sigma, 2 * Y)
 
     def assess_optim(self, x: np.ndarray, t: float) -> Tuple[Cut, Optional[float]]:
         """
@@ -62,9 +64,12 @@ class mle_oracle:
         if cut := self.lmi0.assess_feas(x):
             return cut, None
 
-        R = self.lmi0.ldlt_mgr.sqrt()
+        R = self.lmi0.sqrt()
         f1, g = mle_value_and_grad(R, self.Y, self.Sigma)
 
         if (f := f1 - t) >= 0:
             return (g, f), None
         return (g, 0.0), f1
+
+
+MLEOracle = mle_oracle

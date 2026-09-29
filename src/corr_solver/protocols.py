@@ -26,6 +26,40 @@ class OptimizationOracle(Protocol):
         ...
 
 
+class SqrtFeasibilityOracle(FeasibilityOracle, Protocol):
+    """Feasibility oracle that also exposes a PSD square root of its factor.
+
+    Both the pure-Python and Numba ``lmi0`` oracles satisfy this structurally,
+    even though ``ellalgo`` only exposes ``sqrt`` through ``ldlt_mgr`` while the
+    Numba drop-in exposes it directly.
+    """
+
+    def sqrt(self) -> Arr:
+        """Return upper-triangular ``R`` with the feasible matrix ``= R^T R``."""
+        ...
+
+
+class QuadraticOracle(Protocol):
+    """Quadratic-matrix-inequality oracle, as composed by the LSQ oracle.
+
+    The witness is deliberately exposed as the scalar ``witness_sq`` rather than
+    the raw ``ldlt_mgr``/``wit`` buffers, so the pure-Python and Numba oracles
+    agree on the accessor despite using different internal storage.
+    """
+
+    def update(self, t: float) -> None:
+        """Set the best-so-far objective value ``t``."""
+        ...
+
+    def assess_feas(self, x: Arr) -> Optional[Cut]:
+        """Assess feasibility of ``x``."""
+        ...
+
+    def witness_sq(self) -> float:
+        """Return ``wit @ wit`` over the failed block after an infeasible check."""
+        ...
+
+
 class MatrixFunction(Protocol):
     """A symmetric matrix-valued function ``H(x)``, as consumed by ``GMIOracle``."""
 
@@ -41,7 +75,7 @@ class MatrixFunction(Protocol):
 class OracleBackend(Protocol):
     """Factory for a whole family of oracles (pure Python or Numba)."""
 
-    def lmi0(self, F: List[Arr]) -> FeasibilityOracle:
+    def lmi0(self, F: List[Arr]) -> SqrtFeasibilityOracle:
         """Return an oracle for ``sum_k F_k x_k >= 0``."""
         ...
 
@@ -49,7 +83,7 @@ class OracleBackend(Protocol):
         """Return an oracle for ``F0 - sum_k F_k x_k >= 0``."""
         ...
 
-    def qmi(self, F: List[Arr], F0: Arr) -> Any:
+    def qmi(self, F: List[Arr], F0: Arr) -> QuadraticOracle:
         """Return a quadratic-matrix-inequality oracle."""
         ...
 

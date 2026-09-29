@@ -8,12 +8,10 @@ then the ``qmi`` oracle for the quadratic-matrix-inequality reformulation;
 optimality is assessed against the best-so-far value ``t``.
 """
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
-from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 
-from .qmi_oracle import QMIOracle
 from .types import Arr, Cut
 
 
@@ -43,9 +41,13 @@ class lsq_oracle:
     where ``F(x) = F[1] x[1] + ... + F[n] x[n]`` and ``{Fk}i,j = Ψk(||sj - si||)``
     """
 
-    def __init__(self, F: List[Arr], F0: Arr):
-        self.qmi = QMIOracle(F, F0)
-        self.lmi0 = LMI0Oracle(F)
+    def __init__(self, F: List[Arr], F0: Arr, backend: Any = None):
+        if backend is None:
+            from .backends import PurePythonBackend
+
+            backend = PurePythonBackend()
+        self.qmi = backend.qmi(F, F0)
+        self.lmi0 = backend.lmi0(F)
 
     def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
         """
@@ -75,14 +77,13 @@ class lsq_oracle:
         if cut := self.qmi.assess_feas(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
-            self.qmi.ldlt_mgr.witness()
-            s, n = self.qmi.ldlt_mgr.pos
-            wit = self.qmi.ldlt_mgr.wit[s:n]
-            g[-1] = -(wit @ wit)
+            g[-1] = -self.qmi.witness_sq()
             return (g, fj), None
-
         g[-1] = 1
         tc = x[-1]
         if (fj := tc - t) > 0.0:
             return (g, fj), None
         return (g, 0.0), tc
+
+
+LSQOracle = lsq_oracle

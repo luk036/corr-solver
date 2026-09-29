@@ -32,7 +32,8 @@ from typing import Any, List, Optional, Tuple
 import numpy as np
 from numba import njit
 
-from .math_utils import mle_value_and_grad
+from .lsq_corr_oracle import lsq_oracle
+from .mle_corr_oracle import mle_oracle
 from .types import Arr, Cut
 
 
@@ -250,6 +251,11 @@ class NumbaQMIOracle:
             return None
         return self.g.copy(), -self.D[pos1 - 1]
 
+    def witness_sq(self) -> float:
+        """Return ``wit @ wit`` over the failed block, mirroring the pure oracle."""
+        wit = self.wit[: self.pos1]
+        return float(wit @ wit)
+
 
 class NumbaLMI0Oracle:
     """Oracle for ``sum_k F_k x_k >= 0``, JIT-compiled.
@@ -326,79 +332,26 @@ class NumbaLMIOracle:
         return self.g.copy(), ep
 
 
-class NumbaLsqOracle:
-    """Least-squares correlation oracle, JIT-compiled.
-
-    Drop-in replacement for :class:`~corr_solver.lsq_corr_oracle.lsq_oracle`.
+class NumbaLsqOracle(lsq_oracle):
+    """Least-squares oracle bound to the Numba leaves; the logic lives in the base.
 
     :param F: basis matrices ``[F_1, ..., F_n]``
     :param F0: reference matrix
     """
 
     def __init__(self, F: List[Arr], F0: Arr) -> None:
-        self.qmi = NumbaQMIOracle(F, F0)
-        self.lmi0 = NumbaLMI0Oracle(F)
-
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """Assess feasibility and optimality of ``x`` against best-so-far ``t``.
-
-        :param x: candidate point, the last entry being the objective variable
-        :param t: best-so-far optimal value
-        :return: a ``(cut, value)`` pair, mirroring ``lsq_oracle.assess_optim``
-        """
-        n = len(x)
-        g = np.zeros(n)
-        cut = self.lmi0.assess_feas(x[:-1])
-        if cut is not None:
-            g[:-1] = cut[0]
-            return (g, cut[1]), None
-        self.qmi.update(x[-1])
-        cut = self.qmi.assess_feas(x[:-1])
-        if cut is not None:
-            g[:-1] = cut[0]
-            wit = self.qmi.wit[: self.qmi.pos1]
-            g[-1] = -float(wit @ wit)
-            return (g, cut[1]), None
-        g[-1] = 1
-        tc = x[-1]
-        if (fj := tc - t) > 0.0:
-            return (g, fj), None
-        return (g, 0.0), tc
+        super().__init__(F, F0, NumbaBackend())
 
 
-class NumbaMleOracle:
-    """Maximum-likelihood estimation oracle, JIT-compiled.
-
-    Drop-in replacement for :class:`~corr_solver.mle_corr_oracle.mle_oracle`.
+class NumbaMleOracle(mle_oracle):
+    """Maximum-likelihood oracle bound to the Numba leaves; logic lives in the base.
 
     :param Sigma: basis matrices ``[Sigma_1, ..., Sigma_n]``
     :param Y: biased sample covariance matrix
     """
 
     def __init__(self, Sigma: List[Arr], Y: Arr) -> None:
-        self.Y = Y
-        self.Sigma = Sigma
-        self.lmi0 = NumbaLMI0Oracle(Sigma)
-        self.lmi = NumbaLMIOracle(Sigma, 2 * Y)
-
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """Assess feasibility and optimality of ``x`` against best-so-far ``t``.
-
-        :param x: coefficient vector
-        :param t: best-so-far optimal value
-        :return: a ``(cut, value)`` pair, mirroring ``mle_oracle.assess_optim``
-        """
-        cut = self.lmi.assess_feas(x)
-        if cut is not None:
-            return cut, None
-        cut = self.lmi0.assess_feas(x)
-        if cut is not None:
-            return cut, None
-        R = self.lmi0.sqrt()
-        f1, g = mle_value_and_grad(R, self.Y, self.Sigma)
-        if (f := f1 - t) >= 0:
-            return (g, f), None
-        return (g, 0.0), f1
+        super().__init__(Sigma, Y, NumbaBackend())
 
 
 class NumbaBackend:
@@ -418,8 +371,8 @@ class NumbaBackend:
 
     def lsq(self, F: List[Arr], F0: Arr) -> Any:
         """Return a least-squares optimization oracle."""
-        return NumbaLsqOracle(F, F0)
+        return lsq_oracle(F, F0, self)
 
     def mle(self, Sigma: List[Arr], Y: Arr) -> Any:
         """Return a maximum-likelihood optimization oracle."""
-        return NumbaMleOracle(Sigma, Y)
+        return mle_oracle(Sigma, Y, self)

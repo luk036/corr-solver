@@ -90,3 +90,11 @@ class QMIOracle:
         """
         self.qmi.count = 0
         return self.gmi.assess_feas(x)
+
+    def witness_sq(self) -> float:
+        """Return ``wit @ wit`` over the failed block, mirroring the Numba oracle."""
+        mgr = self.ldlt_mgr
+        mgr.witness()
+        start, pos = mgr.pos
+        wit = mgr.wit[start:pos]
+        return float(wit @ wit)
