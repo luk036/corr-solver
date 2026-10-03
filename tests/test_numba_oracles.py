@@ -14,12 +14,9 @@ from corr_solver.backends import make_backend  # noqa: E402
 from corr_solver.basis import generate_bspline_info  # noqa: E402
 from corr_solver.corr_bspline_oracle import corr_bspline  # noqa: E402
 from corr_solver.corr_oracle import construct_poly_matrix, corr_poly  # noqa: E402
-from corr_solver.numba_oracles import (  # noqa: E402
-    NumbaLsqOracle,
-    NumbaMleOracle,
-    NumbaQMIOracle,
-    _ldlt,
-)
+from corr_solver.lsq_corr_oracle import lsq_oracle  # noqa: E402
+from corr_solver.mle_corr_oracle import mle_oracle  # noqa: E402
+from corr_solver.numba_oracles import NumbaBackend, NumbaQMIOracle, _ldlt  # noqa: E402
 from corr_solver.solvers import (  # noqa: E402
     lsq_corr_core,
     lsq_corr_core2,
@@ -140,7 +137,10 @@ def _lsq_trajectory(Y: np.ndarray, site: np.ndarray) -> list:
     """
     calls: list = []
 
-    class Recorder(NumbaLsqOracle):
+    class Recorder(lsq_oracle):
+        def __init__(self, F: list, F0: np.ndarray) -> None:
+            super().__init__(F, F0, NumbaBackend())
+
         def assess_optim(self, x: np.ndarray, t: float) -> Any:
             calls.append((np.array(x), t))
             return super().assess_optim(x, t)
@@ -157,7 +157,10 @@ def _mle_trajectory(Y: np.ndarray, site: np.ndarray) -> list:
     """
     calls: list = []
 
-    class Recorder(NumbaMleOracle):
+    class Recorder(mle_oracle):
+        def __init__(self, Sigma: list, Y: np.ndarray) -> None:
+            super().__init__(Sigma, Y, NumbaBackend())
+
         def assess_optim(self, x: np.ndarray, t: float) -> Any:
             calls.append((np.array(x), t))
             return super().assess_optim(x, t)
@@ -257,7 +260,13 @@ def test_numba_lsq_corr_poly(site: np.ndarray, Y: np.ndarray) -> None:
 
 def test_numba_lsq_corr_poly2(site: np.ndarray, Y: np.ndarray) -> None:
     """[summary]"""
-    _, num_iters, feasible = corr_poly(Y, site, M_BASIS, NumbaLsqOracle, lsq_corr_core2)
+    _, num_iters, feasible = corr_poly(
+        Y,
+        site,
+        M_BASIS,
+        lambda F, F0: lsq_oracle(F, F0, NumbaBackend()),
+        lsq_corr_core2,
+    )
     assert feasible
     assert num_iters <= 1095
 
@@ -265,7 +274,11 @@ def test_numba_lsq_corr_poly2(site: np.ndarray, Y: np.ndarray) -> None:
 def test_numba_mle_corr_bspline(site: np.ndarray, Y: np.ndarray) -> None:
     """[summary]"""
     _, num_iters, feasible = corr_bspline(
-        Y, site, M_BASIS, NumbaMleOracle, mle_corr_core
+        Y,
+        site,
+        M_BASIS,
+        lambda Sigma, Y: mle_oracle(Sigma, Y, NumbaBackend()),
+        mle_corr_core,
     )
     assert feasible
     assert num_iters <= 388

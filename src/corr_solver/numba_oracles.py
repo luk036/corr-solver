@@ -32,8 +32,6 @@ from typing import List, Optional, Tuple
 import numpy as np
 from numba import njit
 
-from .lsq_corr_oracle import lsq_oracle
-from .mle_corr_oracle import mle_oracle
 from .protocols import (
     FeasibilityOracle,
     OptimizationOracle,
@@ -338,28 +336,6 @@ class NumbaLMIOracle:
         return self.g.copy(), ep
 
 
-class NumbaLsqOracle(lsq_oracle):
-    """Least-squares oracle bound to the Numba leaves; the logic lives in the base.
-
-    :param F: basis matrices ``[F_1, ..., F_n]``
-    :param F0: reference matrix
-    """
-
-    def __init__(self, F: List[Arr], F0: Arr) -> None:
-        super().__init__(F, F0, NumbaBackend())
-
-
-class NumbaMleOracle(mle_oracle):
-    """Maximum-likelihood oracle bound to the Numba leaves; logic lives in the base.
-
-    :param Sigma: basis matrices ``[Sigma_1, ..., Sigma_n]``
-    :param Y: biased sample covariance matrix
-    """
-
-    def __init__(self, Sigma: List[Arr], Y: Arr) -> None:
-        super().__init__(Sigma, Y, NumbaBackend())
-
-
 class NumbaBackend:
     """Numba-compiled oracle family, mirroring ``PurePythonBackend``."""
 
@@ -377,8 +353,12 @@ class NumbaBackend:
 
     def lsq(self, F: List[Arr], F0: Arr) -> OptimizationOracle:
         """Return a least-squares optimization oracle."""
-        return NumbaLsqOracle(F, F0)
+        from .lsq_corr_oracle import lsq_oracle
+
+        return lsq_oracle(F, F0, self)
 
     def mle(self, Sigma: List[Arr], Y: Arr) -> OptimizationOracle:
         """Return a maximum-likelihood optimization oracle."""
-        return NumbaMleOracle(Sigma, Y)
+        from .mle_corr_oracle import mle_oracle
+
+        return mle_oracle(Sigma, Y, self)
