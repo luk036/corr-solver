@@ -18,7 +18,9 @@ import numpy as np
 from scipy.interpolate import BSpline
 from scipy.spatial.distance import pdist, squareform
 
-from .types import Arr, Cut, FitResult
+from .lsq_corr_oracle import lsq_oracle
+from .solvers import lsq_corr_core2
+from .types import Arr, Assessment, Cut, FitResult
 
 
 def construct_distance_matrix(site: Arr) -> Arr:
@@ -79,9 +81,35 @@ def mono_oracle(x: Arr) -> Optional[Cut]:
     return None
 
 
+class OracleDecorator:
+    """Base decorator forwarding oracle calls to a wrapped oracle.
+
+    Subclasses override only the calls they need to intercept; the rest pass
+    through unchanged. This makes the composed oracle satisfy whichever of
+    ``assess_feas``/``update``/``assess_optim`` protocol the chosen core drives.
+
+    :param basis: the wrapped oracle
+    """
+
+    def __init__(self, basis: Any) -> None:
+        self.basis = basis
+
+    def update(self, t: float) -> None:
+        """Forward the best-so-far value to the wrapped oracle."""
+        self.basis.update(t)
+
+    def assess_feas(self, x: Arr) -> Optional[Cut]:
+        """Forward the feasibility check."""
+        return self.basis.assess_feas(x)
+
+    def assess_optim(self, x: Arr, t: float) -> Assessment:
+        """Forward the optimality check."""
+        return self.basis.assess_optim(x, t)
+
+
 # The `MonotoneDecreasingOracle` class is an oracle that checks if a given sequence is monotonically
 # decreasing.
-class MonotoneDecreasingOracle:
+class MonotoneDecreasingOracle(OracleDecorator):
     """Oracle for the monotonic-decreasing constraint.
 
     Wraps another oracle and prepends a cut whenever the leading control
@@ -100,7 +128,7 @@ class MonotoneDecreasingOracle:
     """
 
     def __init__(self, basis: Any, n_coeff: Optional[int] = None) -> None:
-        self.basis = basis
+        super().__init__(basis)
         self.n_coeff = n_coeff
 
     def _mono_cut(self, x: Arr, k: int) -> Optional[Cut]:
@@ -111,30 +139,24 @@ class MonotoneDecreasingOracle:
             return g, fj
         return None
 
-    def update(self, t: float) -> None:
-        """Forward the best-so-far value to the wrapped feasibility oracle."""
-        self.basis.update(t)
-
     def assess_feas(self, x: Arr) -> Optional[Cut]:
         """Return a monotonicity cut if ``x`` violates it, else delegate."""
         k = len(x) if self.n_coeff is None else self.n_coeff
         if (cut := self._mono_cut(x, k)) is not None:
             return cut
-        return self.basis.assess_feas(x)
+        return super().assess_feas(x)
 
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
+    def assess_optim(self, x: Arr, t: float) -> Assessment:
         """Return a monotonicity cut if ``x`` violates it, else delegate.
 
         :param x: An array of values
-        :type x: Arr
         :param t: the best-so-far optimal value
-        :type t: float
-        :return: a ``(cut, value)`` pair
+        :return: an :class:`~corr_solver.types.Assessment`
         """
         k = len(x) - 1 if self.n_coeff is None else self.n_coeff
         if (cut := self._mono_cut(x, k)) is not None:
-            return cut, None
-        return self.basis.assess_optim(x, t)
+            return Assessment(cut, None)
+        return super().assess_optim(x, t)
 
 
 mono_decreasing_oracle2 = MonotoneDecreasingOracle
@@ -172,11 +194,17 @@ def generate_bspline_info(site: Arr, m: int) -> Tuple[List[Arr], np.ndarray, int
 
 @dataclass(frozen=True, eq=False)
 class BasisModel:
-    """A built basis: its matrices plus the oracle wrapper and curve factory."""
+    """A built basis: its matrices plus the oracle wrapper and curve factory.
+
+    :param oracle: default oracle factory ``(matrices, Y) -> oracle``
+    :param core: default solver core matching that oracle
+    """
 
     matrices: List[Arr]
     wrap: Callable[[Any, int], Any]
     curve: Callable[[Arr], Any]
+    oracle: Optional[Callable[[List[Arr], Arr], Any]] = None
+    core: Optional[Any] = None
 
 
 class Basis(Protocol):
@@ -196,6 +224,8 @@ class PolynomialBasis:
             matrices=construct_poly_matrix(site, m),
             wrap=lambda oracle, m: oracle,
             curve=lambda coeffs: np.poly1d(np.ascontiguousarray(coeffs[::-1])),
+            oracle=lsq_oracle,
+            core=lsq_corr_core2,
         )
 
 
@@ -209,6 +239,8 @@ class BSplineBasis:
             matrices=matrices,
             wrap=lambda oracle, m: MonotoneDecreasingOracle(oracle, m),
             curve=lambda coeffs: BSpline(t, coeffs, k),
+            oracle=lsq_oracle,
+            core=lsq_corr_core2,
         )
 
 
@@ -216,8 +248,8 @@ def fit(
     Y: Arr,
     site: Arr,
     m: int,
-    oracle: Any,
-    corr_core: Any,
+    oracle: Any = None,
+    corr_core: Any = None,
     basis: Optional[Basis] = None,
 ) -> FitResult:
     """Build the basis, wrap the oracle, run the core, and package the curve.
@@ -225,13 +257,21 @@ def fit(
     :param Y: biased sample covariance matrix
     :param site: site locations
     :param m: degree / number of basis functions
-    :param oracle: oracle factory ``(Sigma, Y) -> oracle``
-    :param corr_core: cutting-plane solver core
+    :param oracle: oracle factory ``(matrices, Y) -> oracle``; defaults to the
+        basis's :attr:`BasisModel.oracle`
+    :param corr_core: cutting-plane solver core; defaults to the basis's
+        :attr:`BasisModel.core`
     :param basis: basis strategy; defaults to :class:`PolynomialBasis`
     :return: the fitted curve, the iteration count and a feasibility flag
     """
     basis = PolynomialBasis() if basis is None else basis
     model = basis.build(site, m)
+    if oracle is None and corr_core is None:
+        oracle, corr_core = model.oracle, model.core
+    elif oracle is None or corr_core is None:
+        raise ValueError("pass both `oracle` and `corr_core`, or neither")
+    if oracle is None or corr_core is None:
+        raise ValueError("basis does not provide a default oracle/core")
     Pb = oracle(model.matrices, Y)
     omega = model.wrap(Pb, m)
     c, num_iters, feasible = corr_core(Y, m, omega)
