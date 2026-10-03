@@ -5,9 +5,9 @@ pure-Python oracles, the Numba drop-ins and the ``ellalgo`` oracles satisfy
 structurally; concrete oracles are free to inherit from one another.
 """
 
-from typing import Any, List, Optional, Protocol, Tuple
+from typing import Any, List, Optional, Protocol
 
-from .types import Arr, Cut
+from .types import Arr, Assessment, Cut
 
 
 class FeasibilityOracle(Protocol):
@@ -21,8 +21,8 @@ class FeasibilityOracle(Protocol):
 class OptimizationOracle(Protocol):
     """Optimization oracle: assess ``x`` against the best-so-far value ``t``."""
 
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """Return a ``(cut, value)`` pair."""
+    def assess_optim(self, x: Arr, t: float) -> Assessment:
+        """Return an :class:`~corr_solver.types.Assessment`."""
         ...
 
 
