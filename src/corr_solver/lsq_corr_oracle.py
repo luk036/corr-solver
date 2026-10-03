@@ -8,12 +8,13 @@ then the ``qmi`` oracle for the quadratic-matrix-inequality reformulation;
 optimality is assessed against the best-so-far value ``t``.
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 
+from .backends import default_backend
 from .protocols import OracleBackend
-from .types import Arr, Cut
+from .types import Arr, Assessment
 
 
 #    min   ‖ F0 − F(x) ‖
@@ -44,26 +45,16 @@ class lsq_oracle:
 
     def __init__(self, F: List[Arr], F0: Arr, backend: Optional[OracleBackend] = None):
         if backend is None:
-            from .backends import PurePythonBackend
-
-            backend = PurePythonBackend()
+            backend = default_backend()
         self.qmi = backend.qmi(F, F0)
         self.lmi0 = backend.lmi0(F)
 
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """
-        The `assess_optim` function assesses the optimality of a given solution `x` and returns a tuple
-        containing a cut and an optional float value.
+    def assess_optim(self, x: Arr, t: float) -> Assessment:
+        """Assess optimality of ``x`` against the best-so-far value ``t``.
 
-        :param x: The parameter `x` is of type `Arr`, which is likely a numpy array or a list of numbers. It
-            represents some input values for the optimization problem
-        :type x: Arr
-        :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
-            used in the assessment of the optimization problem
-        :type t: float
-        :return: The function `assess_optim` returns a tuple containing two elements. The first element is a
-            tuple `(g, fj)` which represents a cut and its corresponding objective value. The second element is
-            an optional float value `tc` if `fj > 0.0`, otherwise it is `None`.
+        :param x: augmented variable vector ``(coeffs..., t)``
+        :param t: best-so-far optimal value
+        :return: an :class:`~corr_solver.types.Assessment`
         """
         n = len(x)
         g = np.zeros(n)
@@ -72,19 +63,19 @@ class lsq_oracle:
             g1, fj = cut
             g[:-1] = g1
             g[-1] = 0.0
-            return (g, fj), None
+            return Assessment((g, fj), None)
 
         self.qmi.update(x[-1])
         if cut := self.qmi.assess_feas(x[:-1]):
             g1, fj = cut
             g[:-1] = g1
             g[-1] = -self.qmi.witness_sq()
-            return (g, fj), None
+            return Assessment((g, fj), None)
         g[-1] = 1
         tc = x[-1]
         if (fj := tc - t) > 0.0:
-            return (g, fj), None
-        return (g, 0.0), tc
+            return Assessment((g, fj), None)
+        return Assessment((g, 0.0), tc)
 
 
 LSQOracle = lsq_oracle
