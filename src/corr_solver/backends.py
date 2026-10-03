@@ -15,8 +15,6 @@ from typing import Callable, Dict, List, Optional
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 from ellalgo.oracles.lmi_oracle import LMIOracle
 
-from .lsq_corr_oracle import lsq_oracle
-from .mle_corr_oracle import mle_oracle
 from .protocols import (
     FeasibilityOracle,
     OptimizationOracle,
@@ -65,11 +63,20 @@ class PurePythonBackend:
 
     def lsq(self, F: List[Arr], F0: Arr) -> OptimizationOracle:
         """Return a least-squares optimization oracle."""
+        from .lsq_corr_oracle import lsq_oracle
+
         return lsq_oracle(F, F0, self)
 
     def mle(self, Sigma: List[Arr], Y: Arr) -> OptimizationOracle:
         """Return a maximum-likelihood optimization oracle."""
+        from .mle_corr_oracle import mle_oracle
+
         return mle_oracle(Sigma, Y, self)
+
+
+def default_backend() -> OracleBackend:
+    """Return the default (pure-Python) oracle backend."""
+    return PurePythonBackend()
 
 
 def _numba_backend() -> OracleBackend:
