@@ -21,10 +21,12 @@ from ellalgo.ell import Ell
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 
 from .math_utils import inverse_sqrt_gram, mle_obj, omega_of
+from .mle_corr_oracle import MleOptimOracle
+from .solvers import SolverConfig
 from .types import Arr, Cut
 
 
-class cccp_mle_oracle:
+class cccp_mle_oracle(MleOptimOracle):
     """Oracle for a single CCP round of the MLE.
 
     :param Sigma: basis matrices ``[Sigma_1, ..., Sigma_n]``
@@ -39,24 +41,19 @@ class cccp_mle_oracle:
         self.lmi0 = LMI0Oracle(Sigma)
         self.mk = np.array([float(np.trace(M @ F)) for F in Sigma])
 
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """Assess feasibility of ``Omega(x) >= 0`` and optimality of the surrogate.
+    def _first_cut(self, x: Arr) -> Optional[Cut]:
+        return self.lmi0.assess_feas(x)
 
-        :param x: coefficient vector
-        :param t: best-so-far objective value
-        :return: a ``(cut, value)`` pair
-        """
-        if cut := self.lmi0.assess_feas(x):
-            return cut, None
-        R = self.lmi0.ldlt_mgr.sqrt()
+    def _sqrt(self) -> Arr:
+        return self.lmi0.ldlt_mgr.sqrt()
+
+    def _value_and_grad(self, x: Arr, R: Arr) -> Tuple[float, Arr]:
         S, SY = inverse_sqrt_gram(R, self.Y)
         h = float(np.trace(SY)) + float(x @ self.mk)
         g = np.empty(len(x))
         for i in range(len(x)):
             g[i] = -float(np.trace(S @ self.Sigma[i] @ S @ self.Y)) + self.mk[i]
-        if (f := h - t) >= 0:
-            return (g, f), None
-        return (g, 0.0), h
+        return h, g
 
 
 def cccp_mle(
@@ -66,6 +63,7 @@ def cccp_mle(
     n_outer: int = 40,
     tol: float = 1e-8,
     wrapper: Optional[Callable[[Any], Any]] = None,
+    config: Optional[SolverConfig] = None,
 ) -> Tuple[Arr, int]:
     """Run CCP from ``x0`` until the objective stalls or ``n_outer`` rounds elapse.
 
@@ -75,8 +73,10 @@ def cccp_mle(
     :param n_outer: maximum number of linearization rounds
     :param tol: objective-change tolerance for early stopping
     :param wrapper: optional ``oracle -> oracle`` hook, e.g. a monotonicity wrapper
+    :param config: solver constants; defaults to :class:`SolverConfig`
     :return: the final coefficient vector and the number of rounds used
     """
+    config = SolverConfig() if config is None else config
     x = np.array(x0, dtype=float)
     f_old = np.inf
     for k in range(n_outer):
@@ -84,7 +84,7 @@ def cccp_mle(
         oracle: Any = cccp_mle_oracle(Sigma, Y, M)
         if wrapper is not None:
             oracle = wrapper(oracle)
-        x_new, _, _ = cutting_plane_optim(oracle, Ell(100.0, x), float("inf"))
+        x_new, _, _ = cutting_plane_optim(oracle, Ell(config.cccp_r0, x), float("inf"))
         if x_new is None:
             return x, k
         f_new = mle_obj(x_new, Sigma, Y)

@@ -8,62 +8,82 @@ oracles; the objective and its gradient are then compared against the
 best-so-far value ``t``.
 """
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
+from .backends import default_backend
 from .math_utils import mle_value_and_grad
 from .protocols import OracleBackend
-from .types import Arr, Cut
+from .types import Arr, Assessment, Cut
 
 
-# The `mle_oracle` class represents an oracle for maximum likelihood estimation, which minimizes a
-# certain objective function subject to linear matrix inequality constraints.
-class mle_oracle:
+class MleOptimOracle:
+    """Template method for the MLE-style ``assess_optim`` control flow.
+
+    The shared skeleton checks feasibility, takes a PSD square root of the
+    feasible matrix, and compares the objective against the best-so-far value
+    ``t``. Subclasses plug in the pieces through :meth:`_first_cut`,
+    :meth:`_sqrt` and :meth:`_value_and_grad`.
+    """
+
+    lmi0: Any
+
+    def _first_cut(self, x: Arr) -> Optional[Cut]:
+        """Return a feasibility cut to short-circuit, else ``None``."""
+        return None
+
+    def _sqrt(self) -> Arr:
+        """Return upper-triangular ``R`` with the feasible matrix ``= R^T R``."""
+        raise NotImplementedError
+
+    def _value_and_grad(self, x: Arr, R: Arr) -> Tuple[float, Arr]:
+        """Return the objective value and its gradient for factor ``R``."""
+        raise NotImplementedError
+
+    def assess_optim(self, x: Arr, t: float) -> Assessment:
+        """Assess feasibility then optimality against best-so-far ``t``.
+
+        :param x: coefficient vector
+        :param t: best-so-far optimal value
+        :return: an :class:`~corr_solver.types.Assessment`
+        """
+        if cut := self._first_cut(x):
+            return Assessment(cut, None)
+
+        R = self._sqrt()
+        f1, g = self._value_and_grad(x, R)
+
+        if (f := f1 - t) >= 0:
+            return Assessment((g, f), None)
+        return Assessment((g, 0.0), f1)
+
+
+class mle_oracle(MleOptimOracle):
+    """Maximum likelihood estimation:
+
+    min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
+    s.t. 2Y ⪰ Ω(p) ⪰ 0,
+    """
+
     def __init__(
         self, Sigma: List[Arr], Y: Arr, backend: Optional[OracleBackend] = None
     ):
-        """Maximum likelyhood estimation:
-
-        min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
-        s.t. 2Y ⪰ Ω(p) ⪰ 0,
-
-
-        """
         if backend is None:
-            from .backends import PurePythonBackend
-
-            backend = PurePythonBackend()
+            backend = default_backend()
         self.Y = Y
         self.Sigma = Sigma
         self.lmi0 = backend.lmi0(Sigma)
         self.lmi = backend.lmi(Sigma, 2 * Y)
 
-    def assess_optim(self, x: Arr, t: float) -> Tuple[Cut, Optional[float]]:
-        """
-        The `assess_optim` function assesses the feasibility and optimality of a given solution by
-        calculating various values and returning a tuple of cuts and a float value.
-
-        :param x: The parameter `x` is a numpy array representing the coefficients of basis functions. It is
-            used as input to assess the feasibility of a solution
-        :type x: Arr
-        :param t: The parameter `t` represents the best-so-far optimal value. It is a float value that is
-            used in the calculation of the objective function `f`
-        :type t: float
-        :return: The function `assess_optim` returns a tuple containing two elements. The first element is a
-            `Cut` object or a tuple `(g, f)` depending on the condition. The second element is either `None` or
-            a float value.
-        """
+    def _first_cut(self, x: Arr) -> Optional[Cut]:
         if cut := self.lmi.assess_feas(x):
-            return cut, None
+            return cut
+        return self.lmi0.assess_feas(x)
 
-        if cut := self.lmi0.assess_feas(x):
-            return cut, None
+    def _sqrt(self) -> Arr:
+        return self.lmi0.sqrt()
 
-        R = self.lmi0.sqrt()
-        f1, g = mle_value_and_grad(R, self.Y, self.Sigma)
-
-        if (f := f1 - t) >= 0:
-            return (g, f), None
-        return (g, 0.0), f1
+    def _value_and_grad(self, x: Arr, R: Arr) -> Tuple[float, Arr]:
+        return mle_value_and_grad(R, self.Y, self.Sigma)
 
 
 MLEOracle = mle_oracle
