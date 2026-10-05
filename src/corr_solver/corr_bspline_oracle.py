@@ -9,7 +9,7 @@ matrix via the quadratic B-spline basis in :mod:`corr_solver.basis`.
 re-exported here for backward compatibility.
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from .basis import (
     BSplineBasis,
@@ -19,6 +19,7 @@ from .basis import (
     mono_decreasing_oracle2,
     mono_oracle,
 )
+from .solvers import SolverConfig
 from .types import Arr, FitResult
 
 __all__ = [
@@ -30,7 +31,14 @@ __all__ = [
 ]
 
 
-def corr_bspline(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> FitResult:
+def corr_bspline(
+    Y: Arr,
+    site: Arr,
+    m: int,
+    oracle: Any,
+    corr_core: Any,
+    config: Optional[SolverConfig] = None,
+) -> FitResult:
     """
     The `corr_bspline` function takes in input parameters `Y`, `site`, `m`, `oracle`, and `corr_core`, and
     returns a BSpline object, the number of iterations, and a feasibility indicator.
@@ -43,6 +51,8 @@ def corr_bspline(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> FitR
         flexible curve that can better fit the data, but it may also lead to overfitting
     :param oracle: The `oracle` parameter is a separation oracle
     :param corr_core: The `corr_core` parameter is a function that takes in the following arguments:
+    :param config: optional :class:`~corr_solver.solvers.SolverConfig`; defaults to
+        the solver core's own configuration
     :return: The function `corr_bspline` returns three values:
     """
-    return fit(Y, site, m, oracle, corr_core, BSplineBasis())
+    return fit(Y, site, m, oracle, corr_core, BSplineBasis(), config)

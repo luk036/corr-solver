@@ -19,7 +19,7 @@ from scipy.interpolate import BSpline
 from scipy.spatial.distance import pdist, squareform
 
 from .lsq_corr_oracle import lsq_oracle
-from .solvers import lsq_corr_core2
+from .solvers import SolverConfig, lsq_corr_core2
 from .types import Arr, Assessment, Cut, FitResult
 
 
@@ -251,6 +251,7 @@ def fit(
     oracle: Any = None,
     corr_core: Any = None,
     basis: Optional[Basis] = None,
+    config: Optional[SolverConfig] = None,
 ) -> FitResult:
     """Build the basis, wrap the oracle, run the core, and package the curve.
 
@@ -262,6 +263,8 @@ def fit(
     :param corr_core: cutting-plane solver core; defaults to the basis's
         :attr:`BasisModel.core`
     :param basis: basis strategy; defaults to :class:`PolynomialBasis`
+    :param config: solver constants forwarded to ``corr_core``; defaults to its
+        own :class:`~corr_solver.solvers.SolverConfig`
     :return: the fitted curve, the iteration count and a feasibility flag
     """
     basis = PolynomialBasis() if basis is None else basis
@@ -274,5 +277,8 @@ def fit(
         raise ValueError("basis does not provide a default oracle/core")
     Pb = oracle(model.matrices, Y)
     omega = model.wrap(Pb, m)
-    c, num_iters, feasible = corr_core(Y, m, omega)
+    if config is None:
+        c, num_iters, feasible = corr_core(Y, m, omega)
+    else:
+        c, num_iters, feasible = corr_core(Y, m, omega, config=config)
     return FitResult(model.curve(c), num_iters, feasible)

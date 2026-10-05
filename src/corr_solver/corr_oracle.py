@@ -15,7 +15,7 @@ covariance matrices:
 :mod:`corr_solver.basis` and are re-exported here for backward compatibility.
 """
 
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from lds_gen.lds import Halton
@@ -28,6 +28,7 @@ from .basis import (
     fit,
 )
 from .kernels import KERNELS
+from .solvers import SolverConfig
 from .types import Arr, FitResult
 
 __all__ = [
@@ -40,13 +41,13 @@ __all__ = [
 ]
 
 
-def create_2d_sites(nx: int = 10, ny: int = 8) -> Arr:
+def create_2d_sites(nx: int = 5, ny: int = 4) -> Arr:
     """
     The function `create_2d_sites` generates a 2D array of site locations using the Halton sequence.
 
     :param nx: The parameter `nx` represents the number of sites in the x-direction, while `ny`
-        represents the number of sites in the y-direction, defaults to 10 (optional)
-    :param ny: The parameter `ny` represents the number of rows in the 2D sites object, defaults to 8
+        represents the number of sites in the y-direction, defaults to 5 (optional)
+    :param ny: The parameter `ny` represents the number of rows in the 2D sites object, defaults to 4
         (optional)
     :return: The function `create_2d_sites` returns a 2D array representing the location of sites.
     """
@@ -73,21 +74,29 @@ def _sample_covariance(Sigma: Arr, N: int, rng: Any, var: float, tau: float) -> 
 
 
 def _sample_from_dist_sq(
-    dist_sq: Arr, N: int, rng: Any, kernel: str, rate: float
+    dist_sq: Arr,
+    N: int,
+    rng: Any,
+    kernel: str,
+    rate: float,
+    var: float = 2.0,
+    tau: float = 1e-5,
 ) -> Arr:
     """Kernel the squared distances and sample a covariance from the result."""
     if rng is None:
         rng = np.random.RandomState(5)
     Sigma = KERNELS[kernel](dist_sq, rate)
-    return _sample_covariance(Sigma, N, rng, var=2.0, tau=0.00001)
+    return _sample_covariance(Sigma, N, rng, var=var, tau=tau)
 
 
 def create_2d_isotropic(
     site: Arr,
-    N: int = 3000,
+    N: int = 1000,
     rng: Any = None,
     kernel: str = "gaussian",
     rate: float = 0.12,
+    var: float = 2.0,
+    tau: float = 1e-5,
 ) -> Arr:
     """
     The function `create_2d_isotropic` generates a biased covariance matrix for a 2D isotropic object
@@ -95,25 +104,29 @@ def create_2d_isotropic(
 
     :param site: site locations, one row per site
     :type site: Arr
-    :param N: number of samples averaged to estimate the covariance, defaults to 3000
+    :param N: number of samples averaged to estimate the covariance, defaults to 1000
     :param rng: optional random source; defaults to ``RandomState(5)`` for
         reproducible output
     :param kernel: a key of :data:`corr_solver.kernels.KERNELS`
     :param rate: the kernel rate / inverse length scale
+    :param var: signal standard deviation
+    :param tau: observation-noise standard deviation
     :return: a biased sample covariance matrix `Y`.
     """
     dist_sq = squareform(pdist(site, "sqeuclidean"))
-    return _sample_from_dist_sq(dist_sq, N, rng, kernel, rate)
+    return _sample_from_dist_sq(dist_sq, N, rng, kernel, rate, var, tau)
 
 
 def create_2d_anisotropic(
     site: Arr,
     length_x: float,
     length_y: float,
-    N: int = 3000,
+    N: int = 1000,
     rng: Any = None,
     kernel: str = "gaussian",
     rate: float = 0.12,
+    var: float = 2.0,
+    tau: float = 1e-5,
 ) -> Arr:
     """Biased sample covariance from a kernel with per-axis length scales.
 
@@ -124,15 +137,24 @@ def create_2d_anisotropic(
     :param rng: optional random source; defaults to ``RandomState(5)``
     :param kernel: a key of :data:`corr_solver.kernels.KERNELS`
     :param rate: the kernel rate / inverse length scale
+    :param var: signal standard deviation
+    :param tau: observation-noise standard deviation
     :return: a biased sample covariance matrix `Y`.
     """
     dx = site[:, None, 0] - site[None, :, 0]
     dy = site[:, None, 1] - site[None, :, 1]
     dist_sq = (dx / length_x) ** 2 + (dy / length_y) ** 2
-    return _sample_from_dist_sq(dist_sq, N, rng, kernel, rate)
+    return _sample_from_dist_sq(dist_sq, N, rng, kernel, rate, var, tau)
 
 
-def corr_poly(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> FitResult:
+def corr_poly(
+    Y: Arr,
+    site: Arr,
+    m: int,
+    oracle: Any,
+    corr_core: Any,
+    config: Optional[SolverConfig] = None,
+) -> FitResult:
     """
     The function `corr_poly` takes in a signal `Y`, a sparsity level `site`, a maximum degree `m`, an
     oracle function, and a correction core function, and returns a polynomial, the number of iterations,
@@ -148,9 +170,11 @@ def corr_poly(Y: Arr, site: Arr, m: int, oracle: Any, corr_core: Any) -> FitResu
     :param oracle: The `oracle` parameter is a function that takes in two arguments: `Sigma` and `Y`.
         `Sigma` is a matrix and `Y` is a vector. The `oracle` function returns a vector `omega`
     :param corr_core: The `corr_core` parameter is a function that takes in the following arguments:
+    :param config: optional :class:`~corr_solver.solvers.SolverConfig`; defaults to
+        the solver core's own configuration
     :return: The function `corr_poly` returns a tuple containing three elements:
         1. A polynomial object representing the polynomial fit to the data.
         2. The number of iterations performed during the correction process.
         3. A boolean value indicating whether a feasible solution was found.
     """
-    return fit(Y, site, m, oracle, corr_core, PolynomialBasis())
+    return fit(Y, site, m, oracle, corr_core, PolynomialBasis(), config)
