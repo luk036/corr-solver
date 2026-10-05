@@ -77,6 +77,7 @@ def cccp_mle(
     :return: the final coefficient vector and the number of rounds used
     """
     config = SolverConfig() if config is None else config
+    options = config.options()
     x = np.array(x0, dtype=float)
     f_old = np.inf
     for k in range(n_outer):
@@ -84,7 +85,9 @@ def cccp_mle(
         oracle: Any = cccp_mle_oracle(Sigma, Y, M)
         if wrapper is not None:
             oracle = wrapper(oracle)
-        x_new, _, _ = cutting_plane_optim(oracle, Ell(config.cccp_r0, x), float("inf"))
+        x_new, _, _ = cutting_plane_optim(
+            oracle, Ell(config.mle_r0, x), float("inf"), options
+        )
         if x_new is None:
             return x, k
         f_new = mle_obj(x_new, Sigma, Y)

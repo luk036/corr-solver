@@ -11,11 +11,12 @@ longer guess dimensions or hardcode the initial ellipsoid values.
 """
 
 from dataclasses import dataclass
-from typing import Any, Protocol, Tuple, Union
+from typing import Any, Optional, Protocol, Tuple, Union
 
 import numpy as np
 from ellalgo.cutting_plane import BSearchAdaptor, bsearch, cutting_plane_optim
 from ellalgo.ell import Ell
+from ellalgo.ell_config import Options
 
 from .types import Arr, CoreResult
 
@@ -24,22 +25,36 @@ from .types import Arr, CoreResult
 class SolverConfig:
     """Numeric constants for the cutting-plane and bisection cores.
 
-    :param mle_r0: initial MLE ellipsoid scale
+    The initial radii are deliberately close to the coefficient scale: an
+    ellipsoid much larger than the solution wastes iterations (the method needs
+    ``O(n^2 log(R/r))``), while one that is too small makes the subproblem
+    infeasible. The MLE radius is shared by :func:`cccp_mle`, whose outer loop
+    starts from the LSQ solution rather than the origin.
+
+    :param mle_r0: initial MLE / CCP ellipsoid scale
     :param lsq_bs_r0: initial ellipsoid scale for the bisection feasibility core
     :param lsq_aug_r0: initial ellipsoid scale for the augmented LSQ core
     :param lsq_frob_scale: multiplier on ``||Y||_F^2`` for the augmented bound
-    :param cccp_r0: initial ellipsoid scale for the CCP outer loop
+    :param tolerance: convergence tolerance forwarded to the ellalgo solvers
+    :param max_iters: iteration cap forwarded to the ellalgo solvers
     """
 
-    mle_r0: float = 50.0
-    lsq_bs_r0: float = 256.0
-    lsq_aug_r0: float = 256.0
-    lsq_frob_scale: float = 32.0
-    cccp_r0: float = 100.0
+    mle_r0: float = 4.0
+    lsq_bs_r0: float = 16.0
+    lsq_aug_r0: float = 16.0
+    lsq_frob_scale: float = 1.0
+    tolerance: float = 1e-12
+    max_iters: int = 2000
+
+    def options(self) -> Options:
+        """Return the ellalgo :class:`~ellalgo.ell_config.Options` for this config."""
+        return Options(max_iters=self.max_iters, tolerance=self.tolerance)
 
 
 class Layout(Protocol):
     """Strategy describing the solver's variable vector."""
+
+    config: SolverConfig
 
     def initial(self, Y: Arr, n: int) -> Tuple[Union[float, Arr], Arr]:
         """Return the initial ellipsoid value and point."""
@@ -112,7 +127,9 @@ def cutting_plane_core(Y: Arr, n: int, omega: Any, layout: Layout) -> CoreResult
     :return: a :class:`~corr_solver.types.CoreResult`
     """
     val, x = layout.initial(Y, n)
-    xbest, _, num_iters = cutting_plane_optim(omega, Ell(val, x), float("inf"))
+    xbest, _, num_iters = cutting_plane_optim(
+        omega, Ell(val, x), float("inf"), layout.config.options()
+    )
     if xbest is None:
         return CoreResult(None, num_iters, False)
     return CoreResult(layout.extract(xbest), num_iters, True)
@@ -124,43 +141,53 @@ def bsearch_core(Y: Arr, n: int, Q: Any, layout: Layout) -> CoreResult:
     :return: a :class:`~corr_solver.types.CoreResult`
     """
     val, x = layout.initial(Y, n)
-    omega = BSearchAdaptor(Q, Ell(val, x))
+    options = layout.config.options()
+    omega = BSearchAdaptor(Q, Ell(val, x), options)
     upper = np.linalg.norm(Y, "fro") ** 2
-    t, num_iters = bsearch(omega, (0.0, upper))
+    t, num_iters = bsearch(omega, (0.0, upper), options)
     return CoreResult(layout.extract(omega.x_best), num_iters, t != upper)
 
 
-def lsq_corr_core(Y: Arr, n: int, Q: Any) -> CoreResult:
+def lsq_corr_core(
+    Y: Arr, n: int, Q: Any, config: Optional[SolverConfig] = None
+) -> CoreResult:
     """Least-squares core: bisection on the objective value.
 
     :param Y: biased sample covariance matrix
     :param n: number of coefficients
     :param Q: feasibility oracle
+    :param config: solver constants; defaults to :class:`SolverConfig`
     :return: a :class:`~corr_solver.types.CoreResult`
     """
-    return bsearch_core(Y, n, Q, LSQBsearchLayout())
+    return bsearch_core(Y, n, Q, LSQBsearchLayout(config or SolverConfig()))
 
 
-def lsq_corr_core2(Y: Arr, n: int, omega: Any) -> CoreResult:
+def lsq_corr_core2(
+    Y: Arr, n: int, omega: Any, config: Optional[SolverConfig] = None
+) -> CoreResult:
     """Least-squares core: augmented ``(x, t)`` cutting-plane optimization.
 
     :param Y: biased sample covariance matrix
     :param n: number of coefficients
     :param omega: optimization oracle
+    :param config: solver constants; defaults to :class:`SolverConfig`
     :return: a :class:`~corr_solver.types.CoreResult`
     """
-    res = cutting_plane_core(Y, n, omega, LSQAugmentedLayout())
+    res = cutting_plane_core(Y, n, omega, LSQAugmentedLayout(config or SolverConfig()))
     if res.coeffs is None:
         return CoreResult(np.zeros(n), res.num_iters, False)
     return res
 
 
-def mle_corr_core(Y: Arr, n: int, omega: Any) -> CoreResult:
+def mle_corr_core(
+    Y: Arr, n: int, omega: Any, config: Optional[SolverConfig] = None
+) -> CoreResult:
     """Maximum-likelihood core.
 
     :param Y: biased sample covariance matrix (unused; kept for the core signature)
     :param n: number of coefficients
     :param omega: optimization oracle
+    :param config: solver constants; defaults to :class:`SolverConfig`
     :return: a :class:`~corr_solver.types.CoreResult`
     """
-    return cutting_plane_core(Y, n, omega, MleLayout())
+    return cutting_plane_core(Y, n, omega, MleLayout(config or SolverConfig()))
