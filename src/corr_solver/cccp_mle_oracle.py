@@ -8,6 +8,9 @@ iterate ``Omega_k``, giving the convex surrogate
     Tr(Omega^-1 Y) + Tr(Omega_k^-1 Omega) + const,
 
 which is minimized over ``Omega >= 0`` with the same cutting-plane machinery.
+The first round uses :func:`~corr_solver.math_utils.mle_corr_mtx` directly as the
+(always positive-definite) initial majorization matrix ``Omega_0^-1``, so it is
+invertible even when the least-squares start is singular.
 The surrogate carries no ``Omega <= 2Y`` upper bound, so it removes the
 non-convexity that the ``2Y`` constraint of
 :class:`~corr_solver.mle_corr_oracle.mle_oracle` was papering over.
@@ -20,7 +23,7 @@ from ellalgo.cutting_plane import cutting_plane_optim
 from ellalgo.ell import Ell
 from ellalgo.oracles.lmi0_oracle import LMI0Oracle
 
-from .math_utils import inverse_sqrt_gram, mle_obj, omega_of
+from .math_utils import inverse_sqrt_gram, mle_corr_mtx, mle_obj, omega_of
 from .mle_corr_oracle import MleOptimOracle
 from .solvers import SolverConfig
 from .types import Arr, Cut
@@ -67,6 +70,11 @@ def cccp_mle(
 ) -> Tuple[Arr, int]:
     """Run CCP from ``x0`` until the objective stalls or ``n_outer`` rounds elapse.
 
+    The first round uses :func:`~corr_solver.math_utils.mle_corr_mtx` as the
+    initial majorization matrix ``Omega_0^-1`` (always positive definite), so it
+    is invertible even when the least-squares ``x0`` yields a singular
+    ``Omega(x0)``. Later rounds linearize at the current iterate.
+
     :param Y: biased sample covariance matrix
     :param Sigma: basis matrices
     :param x0: starting coefficient vector
@@ -79,9 +87,10 @@ def cccp_mle(
     config = SolverConfig() if config is None else config
     options = config.options()
     x = np.array(x0, dtype=float)
+    m0 = mle_corr_mtx(Y)
     f_old = np.inf
     for k in range(n_outer):
-        M = np.linalg.inv(omega_of(x, Sigma))
+        M = m0 if k == 0 else np.linalg.inv(omega_of(x, Sigma))
         oracle: Any = cccp_mle_oracle(Sigma, Y, M)
         if wrapper is not None:
             oracle = wrapper(oracle)

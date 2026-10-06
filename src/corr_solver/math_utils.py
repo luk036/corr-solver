@@ -37,6 +37,29 @@ def mle_obj(x: Arr, Sigma: List[Arr], Y: Arr) -> float:
     return np.inf if sign <= 0 else float(logdet + np.trace(np.linalg.solve(Om, Y)))
 
 
+def mle_corr_mtx(Y: Arr, eps: float = 1e-8) -> Arr:
+    """Return the CCP initial majorization matrix ``Omega_0^-1``.
+
+    ``Omega_0`` is the unconstrained maximum-likelihood covariance, which is
+    ``Y`` itself, the minimiser of ``log det Omega + Tr(Omega^-1 Y)``. That
+    problem is unbounded when ``Y`` is not positive definite, so for such ``Y``
+    the nearest positive-definite matrix in Frobenius norm is used instead,
+    obtained by clipping the eigenvalues to a small positive floor. The inverse
+    is returned directly (the eigenvalues are reciprocated), so the result is
+    always positive definite and the caller never has to invert a singular
+    matrix.
+
+    :param Y: biased sample covariance matrix
+    :param eps: relative eigenvalue floor applied when ``Y`` is not positive definite
+    :return: the positive-definite ``Omega_0^-1``
+    """
+    sym = (Y + Y.T) / 2.0
+    w, V = np.linalg.eigh(sym)
+    floor = eps * max(float(w[-1]), 1.0)
+    w = np.maximum(w, floor)
+    return (V * (1.0 / w)) @ V.T
+
+
 def inverse_sqrt_gram(R: Arr, Y: Arr) -> Tuple[Arr, Arr]:
     """Return ``S = (R^-1)(R^-1)^T`` and ``S @ Y``.
 
