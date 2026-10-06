@@ -10,8 +10,9 @@ abstract: >-
   therefore requires an accurate model of the correlation function. Parametric
   forms such as the exponential, Gaussian and Matérn families are guaranteed
   positive definite but impose a presupposed shape and lead to non-convex
-  estimation; non-parametric bases are more flexible but are harder to fit and
-  do not automatically yield a positive-definite covariance. This paper studies
+  estimation; when that shape is unknown, non-parametric bases avoid assuming it,
+  but they are harder to fit and do not automatically yield a positive-definite
+  covariance. This paper studies
   non-parametric spatial correlation extraction through a basis expansion of the
   covariance matrix, fitted by either least squares (LSQ) or maximum likelihood
   (MLE) with a cutting-plane method. We also derive the multi-chip
@@ -31,7 +32,8 @@ abstract: >-
   mode, and reaches the same optimum as the previous scheme at the cost of two
   extra iterations. We validate the framework on polynomial and clamped B-spline
   bases, on isotropic and anisotropic fields, and across Python, C++ and Rust
-  implementations.
+  implementations; the experiments are synthetic, isolating the algorithm from
+  the unknowns of real silicon, and we discuss the limits this leaves open.
 ---
 
 ## Introduction {#sec:intro}
@@ -60,10 +62,11 @@ Two modeling philosophies compete. Parametric kernels---exponential, Gaussian
 and Matérn---are parameterized by a length scale and are positive definite by
 construction [@matern1986spatial; @rasmussen2006gaussian], but they presuppose
 the shape of the correlation function, and their likelihood is non-convex in the
-parameters. Non-parametric approaches, such as polynomial and B-spline
-expansions of the kernel, make no such presupposition and can represent
-non-monotone correlation functions, but they require a constrained fit and a
-mechanism to enforce positive definiteness.
+parameters. When that shape is not known---as is the case for a new process,
+whose correlation may even be non-monotone---the presupposition is the obstacle,
+and a non-parametric approach is the appropriate choice: polynomial and B-spline
+expansions of the kernel commit to no particular shape, at the cost of a
+constrained fit and a separate mechanism to enforce positive definiteness.
 
 This paper develops a non-parametric framework and, within it, identifies and
 fixes a subtle but critical detail: the initialization of the optimization. Our
@@ -185,10 +188,11 @@ is the gamma function [@matern1986spatial]. The Matérn family interpolates
 between the exponential ($\nu = 1/2$) and the Gaussian (as $\nu \to \infty$),
 so it spans a spectrum of smoothness. These kernels are guaranteed positive
 definite, but estimation is non-convex, the shape is presupposed, and the
-isotropic assumption may be violated. Non-parametric bases---polynomials and
-B-splines---remove the shape presupposition and can represent non-monotone
-correlation, at the cost of a constrained, higher-dimensional fit that does not
-by itself guarantee positive definiteness.
+isotropic assumption may be violated. When the shape of the correlation function
+is unknown, a non-parametric basis---polynomials or B-splines---avoids the
+presupposition and can represent non-monotone correlation, at the cost of a
+constrained, higher-dimensional fit that does not by itself guarantee positive
+definiteness.
 
 ### The Nugget Effect and the Modified Matérn Function
 
@@ -988,42 +992,111 @@ monotonicity index arithmetic, which assumed a trailing objective variable that
 only one solver core carries. The three implementations now agree on every
 reported quantity.
 
-## Discussion {#sec:discussion}
+## Discussion and Limitations {#sec:discussion}
 
-The initializer hardens only the first round of the CCP. Subsequent rounds
-invert the current family iterate $\Omega(x_k)$, which can in principle approach
-the positive semi-definite boundary; the lecture formulation avoids this by
-including a nugget, $\Sigma = \Omega(p) + \kappa I$ with $\kappa \ge 0$, which
-keeps $\Sigma$ positive definite at every round. Adding such a nugget to the
-solver is a natural extension.
+### Threats to Validity: Synthetic Data
 
-The framework has several further limitations. Non-parametric bases with
-global support suffer severe conditioning unless the basis is local (B-spline)
-or small; a monotone fit is not necessarily non-negative, so the minimum
-eigenvalue of the fitted covariance should be checked separately; and the LSQ
-and MLE objectives answer different questions, so the relative error against the
-generating kernel is not a fair criterion for the MLE, which optimizes the
-likelihood rather than the shape. Finally, when the parametric form is known,
-fitting that form remains the simplest and most accurate option; the
-non-parametric machinery is for the case where the shape of the correlation
-function is unknown.
+All numerical experiments use synthetic fields generated by the Cholesky
+construction of Section @sec:experiments, with analytical kernels (Gaussian,
+Matérn, exponential) on Halton grids. This isolates the algorithm from the
+unknowns of real silicon and lets us measure recovery against a ground truth,
+but it does not exercise the artifacts of real test-chip data: spatial
+non-stationarity across the die or wafer edge, non-Gaussian or multimodal process
+noise, systematic lithographic and CMP signatures, and irregular or sparse
+probe-pad geometries. The reported accuracy should therefore be read as an
+*algorithmic* property — the method recovers a known kernel from its own samples
+— rather than a claim of production readiness. Validation on measured test-chip
+data remains the most important open step.
+
+### Objective Alignment: Least Squares versus Maximum Likelihood
+
+The relative error against the generating kernel favors LSQ over the MLE
+(Table \ref{tbl:lsqmle}: $0.128$ versus $0.293$ on the isotropic problem). This
+is not a defect of the optimization but a consequence of the objective. LSQ
+minimizes a Frobenius distance to the sample covariance, a *shape* criterion,
+whereas the MLE maximizes the Gaussian likelihood, which weights the residual by
+the covariance itself. The CCP reaches the *family* maximum-likelihood
+projection — the correct optimum of its own problem — and that projection is
+separated from $\Sigma_{\text{true}}$ by a *misspecification floor* that does not
+vanish as $N \to \infty$. In practice, LSQ is preferable when the goal is a
+faithful curve and the MLE when the goal is a calibrated likelihood, for example
+downstream yield estimation; reporting both, as in Table \ref{tbl:lsqmle}, is the
+honest choice.
+
+### Boundary Protection Beyond the First Round
+
+The `mle_corr_mtx` initializer guarantees strict positive definiteness only for
+the first majorization ($k = 0$). In later rounds the method inverts the current
+iterate, $M_k = \Omega(x_k)^{-1}$; if an intermediate iterate approaches the
+positive semi-definite boundary, this inverse becomes ill-conditioned even though
+the first round is safe. Adding a nugget to every round,
+$\Sigma_k = \Omega(p_k) + \kappa I$ with $\kappa > 0$, keeps the majorization
+matrix uniformly well-conditioned and is the natural remedy; we leave its
+systematic study to future work, since it also perturbs the fitted spectrum.
+
+### Scalability
+
+Each feasibility query performs an LDL$^{\top}$ factorization of the
+$n \times n$ matrix $\Omega(p_c)$, so a single round costs $O(n^3)$ in the number
+of sites. The experiments use $n \in [20, 80]$, where this is negligible, but a
+full-chip characterization vehicle with $n > 10^3$ sites would make dense
+factorizations inside a cutting-plane loop intractable. The separation-oracle
+viewpoint helps here: the cost depends on the oracle rather than on the number of
+constraints, so a structured oracle — banded or locally supported basis matrices,
+low-rank updates, or fitting on a representative subset of sites and
+interpolating — would restore scalability. This is an active direction rather
+than a solved problem.
+
+### Monotonicity, Non-Negativity, and Positive Definiteness
+
+Three distinct properties are easily conflated. A non-increasing coefficient
+sequence makes the quadratic B-spline non-increasing, but a monotone curve is not
+necessarily *non-negative*: the fits dip slightly below zero near $d_{\max}$, so
+the minimum of the fitted curve should be checked separately. More importantly,
+enforcing the LMI $\Omega(p) \succeq 0$ guarantees positive semi-definiteness
+only at the measured sites $s_i$; it does not certify the kernel on the
+continuum. Positive definiteness everywhere requires Bochner's theorem, i.e. a
+non-negative spectral density, which can be imposed by additional constraints on
+the Fourier transform of the basis [@fu2009spectral]. The site-wise LMI is thus a
+necessary but not sufficient discrete surrogate.
+
+### When Is Non-Parametric CCP Warranted?
+
+The misspecification study (@fig:misspec) and the anisotropic experiments make
+the trade-off concrete: Matérn-$3/2$ is the most robust *parametric* default, and
+when the process family is known, fitting that family directly is both simpler
+and more accurate than any non-parametric fit. The non-parametric machinery is
+warranted when the shape is genuinely unknown — in particular when the
+correlation is non-monotone, which no standard parametric kernel represents — or
+when a smooth, shape-agnostic curve is required. In those regimes the clamped,
+monotone B-spline fitted by the CCP is the method of choice; otherwise a Matérn
+baseline is the better engineering decision.
 
 ## Conclusion {#sec:conclusion}
 
 We studied non-parametric spatial correlation extraction as a basis expansion of
 the covariance matrix, fitted by a cutting-plane method under LSQ or MLE
-objectives. The MLE objective is a difference of convex functions and is not
-globally convex, so we solve the problem with the convex-concave procedure,
-whose fixed points are stationary points of the true objective. Our main contribution is a robust initialization for the
-procedure. Rather than warm-starting from the least-squares solution, whose
-covariance is only positive semi-definite, we initialize the first majorization
-matrix from the free maximum-likelihood covariance, repaired to the nearest
-positive-definite matrix by spectral clipping, and return its inverse directly.
-The initializer is always positive definite, eliminates the singular-matrix
-failure mode, and reaches the same optimum with two extra iterations. The
-approach is validated on polynomial and clamped B-spline bases, on isotropic and
-anisotropic fields, over a range of sample sizes, and across Python, C++ and
-Rust implementations.
+objectives, and solved the difference-of-convex MLE with the convex-concave
+procedure, whose fixed points are stationary points of the true objective. The
+main contribution is a robust initialization: instead of warm-starting from the
+least-squares solution, whose covariance is only positive semi-definite, we
+initialize the first majorization matrix from the free maximum-likelihood
+covariance, repaired to the nearest positive-definite matrix by spectral
+clipping, and return its inverse directly. The initializer is always positive
+definite, eliminates the singular-matrix failure mode, and reaches the same
+optimum with two extra iterations.
+
+The approach is validated on polynomial and clamped B-spline bases, on isotropic
+and anisotropic fields, over a range of sample sizes, and across Python, C++ and
+Rust implementations. Two findings temper the scope of the contribution. First,
+the study is synthetic: Cholesky-generated fields with known kernels establish
+the algorithmic behavior but not robustness to real test-chip artifacts, so
+validation on measured data is the key next step. Second, the choice of
+objective matters as much as the choice of solver — LSQ tracks the correlation
+shape more faithfully while the MLE delivers a calibrated likelihood — and the
+non-parametric CCP earns its complexity only when the parametric family is
+genuinely unknown or the correlation is non-monotone. Where a Matérn baseline
+applies, it remains the simpler and more accurate default.
 
 ## Code Availability
 
