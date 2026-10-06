@@ -7,7 +7,11 @@
 #  - `-F pandoc-crossref` resolves the {#sec:..}/{#eq:..}/{#fig:..} labels.
 #  - `--citeproc` builds the reference list from spatial.bib using the vendored,
 #    self-contained ieee.csl (no independent-parent): offline and reproducible.
-#  - Two-column IEEEtran (`documentclass: IEEEtran`, `classoption: journal`).
+#  - Build options live in paper/latex.yaml (IEEEtran journal class, algorithm
+#    packages, hyperlinks) and paper/crossref.yaml (reference prefixes); they are
+#    loaded with --metadata-file because pandoc 3.11 does not read a positional
+#    *.yaml as metadata.
+#  - Two-column IEEEtran.
 #    pandoc emits `longtable` for every pipe table, which is illegal in
 #    two-column mode, so the tables are authored as raw LaTeX `table*` floats
 #    (the same convention the source MLE paper uses); their `\label`s are plain
@@ -22,7 +26,8 @@
 
 PANDOC := pandoc
 FLAGS  := -F pandoc-crossref --citeproc -s -t latex -N --reference-links \
-          --shift-heading-level-by=-1 --pdf-engine=pdflatex
+          --shift-heading-level-by=-1 --pdf-engine=pdflatex \
+          --metadata-file=latex.yaml --metadata-file=crossref.yaml
 
 FIG_SVG := $(wildcard figures/*.svg)
 FIG_PDF := $(FIG_SVG:.svg=.pdf)
@@ -31,7 +36,7 @@ FIG_PDF := $(FIG_SVG:.svg=.pdf)
 
 paper: spatial.pdf
 
-spatial.pdf: spatial.md spatial.bib ieee.csl $(FIG_PDF)
+spatial.pdf: spatial.md spatial.bib ieee.csl latex.yaml crossref.yaml $(FIG_PDF)
 	$(PANDOC) $(FLAGS) spatial.md -o $@
 
 figures: $(FIG_PDF)

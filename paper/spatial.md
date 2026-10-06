@@ -2,21 +2,8 @@
 title: "Non-Parametric Spatial Correlation Extraction and a Robust Initialization for the Convex-Concave Procedure"
 author: Wai-Shing Luk
 date: \today
-documentclass: IEEEtran
-classoption: journal
 bibliography: spatial.bib
 csl: ieee.csl
-link-citations: true
-colorlinks: true
-figPrefix:
-  - "Fig."
-eqnPrefix:
-  - "Eq."
-secPrefix:
-  - "Section"
-header-includes:
-  - '\usepackage{algorithm}'
-  - '\usepackage{algpseudocode}'
 abstract: >-
   Intra-die process variations in nanometer technologies exhibit spatial
   correlation that dominates total variation, and statistical timing analysis
@@ -86,8 +73,7 @@ contributions are as follows.
    fit it with a cutting-plane method, comparing LSQ and MLE objectives
    (@sec:problem).
 2. We analyze the convexity of the MLE objective and show it is a difference of
-   convex functions, convex exactly on $0 \prec \Omega \preceq 2Y$
-   (@sec:convexity).
+   convex functions, hence not globally convex (@sec:convexity).
 3. We solve the MLE with the convex-concave procedure (CCP), whose fixed points
    are stationary points of the true objective (@sec:ccp).
 4. We propose a robust initialization for the CCP that replaces the singular-prone
@@ -435,33 +421,8 @@ $$ {#eq:dc}
 a difference of convex functions: $\operatorname{Tr}(\Omega^{-1} Y)$ is convex
 in $\Omega$, while $\log\det\Omega$ is concave, equivalently $-\log\det\Omega$ is
 convex. A difference of two convex functions is, in general, neither convex nor
-concave, so the ellipsoid method cannot be applied to @eq:dc directly.
-
-### The Convexity Region
-
-The second directional derivative of $f$ along a symmetric direction $U$, with
-$A = \Omega^{-1/2} U \Omega^{-1/2}$ and $B = \Omega^{-1/2} Y \Omega^{-1/2}$, is
-$$
-\begin{aligned}
-D^2 f(U) = \operatorname{Tr}\!\big(A^2 (2B - I)\big) \succeq 0
-\;&\Longleftrightarrow\; 2B \succeq I \\
-&\Longleftrightarrow\; \Omega \preceq 2Y .
-\end{aligned}
-$$ {#eq:hess}
-Hence $f$ is convex exactly on the region
-$\Delta_{2Y} = \{\Omega : 0 \prec \Omega \preceq 2Y\}$, with genuine negative
-curvature outside it. This region coincides with the classical result that the
-Gaussian log-likelihood is strictly concave "in and only in" $\Delta_{2S_n}$
-[@zwiernik2014maximum]. Along the commuting ray $\Omega = t Y$ the objective
-collapses to one variable,
-$$
-f(t) = n \log t + \log\det Y + \frac{n}{t}, \qquad
-f''(t) = \frac{n (2 - t)}{t^{3}},
-$$ {#eq:ray}
-which is convex for $t < 2$ and concave for $t > 2$, with the sign flip exactly
-at $\Omega = 2Y$. @fig:nonconvex visualises the sign flip.
-
-![Second derivative of the objective along the commuting ray $\Omega = tY$; it changes sign exactly at $t = 2$.](figures/fig_nonconvex.pdf){#fig:nonconvex width="100%"}
+concave, so the ellipsoid method cannot be applied to @eq:dc directly. We
+therefore handle the objective by majorization, as described next.
 
 ## The Convex-Concave Procedure {#sec:ccp}
 
@@ -523,6 +484,104 @@ Algorithm \ref{alg:ccp} summarizes the procedure.
   \State $x \gets x'$;\quad $M \gets \Omega(x)^{-1}$
 \EndFor
 \State \Return $x$
+\end{algorithmic}
+\end{algorithm}
+```
+
+### Solving the Convex Subproblem with the Ellipsoid Method
+
+Each CCP round must solve the convex subproblem
+$$
+\min_{p}\;\; \operatorname{Tr}\!\big(\Omega(p)^{-1} Y\big) + \operatorname{Tr}\!\big(M_k\,\Omega(p)\big)
+\quad \text{s.t.}\quad \Omega(p) = \sum_{i} p_i F_i \succeq 0 .
+$$ {#eq:subproblem}
+The constraint is a *linear matrix inequality* (LMI) in the coefficient vector
+$p$, and the objective is convex in $p$: it is the composition of the convex
+function $\operatorname{Tr}(\Omega^{-1}Y)$ with the affine map
+$p \mapsto \Omega(p)$. The subproblem is therefore a small convex program in only
+$m$ variables, independent of the matrix dimension $n$.
+
+We solve it with the **ellipsoid method**, which needs only a *separation
+oracle* rather than an explicit list of constraints [@boyd2004convex;
+@bland1981ellipsoid]. A separation oracle queried at $p_c$ either certifies that
+$p_c$ is feasible, or returns a *cut* $(g, \beta)$, with $g \neq 0$ and, for
+every feasible point,
+$$
+g^{\top}(p - p_c) + \beta \le 0 .
+$$ {#eq:cut}
+The cut is *central* when $\beta = 0$, *deep* when $\beta > 0$, and *shallow*
+when $\beta < 0$. For a convex objective the cut at $p_c$ is the subgradient pair
+$(g, \beta) = (\partial f(p_c),\, f(p_c) - \gamma)$, where $\gamma$ is the
+best-so-far value; the cut eliminates the half of the search space in which no
+better point can lie.
+
+The method keeps an ellipsoid
+$\mathcal{E}(p_c, P) = \{p : (p - p_c)^{\top} P^{-1} (p - p_c) \le 1\}$ around
+$p_c$ and replaces it by the minimum-volume ellipsoid covering the half cut by
+@eq:cut. With $\tilde g = P g$ and $\tau^2 = g^{\top} P g$, the *deep-cut* update
+is
+$$
+p_c^{+} = p_c - \frac{\rho}{\tau^2}\,\tilde g, \qquad
+P^{+} = \delta\Big(P - \frac{\sigma}{\tau^2}\,\tilde g\,\tilde g^{\top}\Big),
+$$ {#eq:deepcut}
+where $\rho = (\tau + m\beta)/(m+1)$, $\sigma = 2\rho/(\tau+\beta)$ and
+$\delta = m^2(\tau+\beta)(\tau-\beta)/((m^2-1)\tau^2)$; for a central cut
+($\beta = 0$) these reduce to $\rho = \tau/(m+1)$, $\sigma = 2/(m+1)$ and
+$\delta = m^2/(m^2-1)$. Splitting $P = \kappa Q$ and updating $Q$ and $\kappa$
+separately saves $m^2$ multiplications per iteration. The volume contracts by
+roughly $e^{-1/(2m)}$ per step, so the iteration count grows as
+$O(m^2 \log(1/\varepsilon))$ — quadratic in the number of coefficients but
+independent of the matrix dimension $n$.
+
+The LMI constraint is handled by a dedicated oracle built on the
+LDL$^{\top}$ factorization. Given $p_c$, the oracle factors
+$\Omega(p_c) = \sum_i p_i F_i = LDL^{\top}$. If every pivot is positive the
+constraint holds, and the oracle evaluates the objective and its gradient,
+$$
+\nabla_i = -\operatorname{Tr}\!\big(S F_i S Y\big) + \operatorname{Tr}(M_k F_i),
+\qquad S = \Omega(p_c)^{-1},
+$$ {#eq:grad}
+reporting the best-so-far value; this is what drives the central cuts of
+Algorithm \ref{alg:ccp}. If instead the factorization fails at row $p$, the
+partial factor yields the *witness* $v = L_{p,p}^{-\top} e_p$ with
+$v^{\top}\Omega_{p,p}(p_c)\,v \le 0$, and the oracle emits the cut
+$$
+g_i = -\,v^{\top} F_i\, v, \qquad \beta = -\,v^{\top}\Omega_{p,p}(p_c)\,v > 0 ,
+$$ {#eq:lmcut}
+which satisfies @eq:cut for every $p$ with $\Omega(p) \succeq 0$. Because the
+factorization stops at the first failing pivot, each query costs only
+$O(p^3) \le O(n^3)$ work rather than a full factorization: the constraint is
+evaluated *lazily*. The same oracle and ellipsoid engine also solve the
+quadratic-matrix-inequality constraint of the LSQ problem, with a bisection outer
+loop over the objective.
+
+Because the ellipsoid lives in the $m$-dimensional coefficient space rather than
+the $n \times n$ matrix space, each subproblem stays cheap even when $n$ is
+large. A generic semidefinite-programming solver, by contrast, treats the whole
+matrix as a variable and is far slower.
+
+```{=latex}
+\begin{algorithm}[t]
+\footnotesize
+\caption{Ellipsoid step for the LMI-constrained subproblem}
+\label{alg:ellipsoid}
+\begin{algorithmic}[1]
+\Require center $p_c$, shape $\kappa Q$, oracle $O$, dimension $m$, accuracy $r$
+\Repeat
+  \State $(g, \beta) \gets O.\textsc{Assess}(p_c)$
+  \If{$g = \textbf{none}$} \State \Return $p_c$ \Comment{feasible and optimal} \EndIf
+  \State $\tilde g \gets Q g$;\quad $\omega \gets g^{\top}\tilde g$;\quad
+         $\tau \gets \sqrt{\kappa\,\omega}$
+  \If{$\tau + m\beta \le 0$} \State \textbf{break} \Comment{no smaller ellipsoid} \EndIf
+  \If{$\beta > \tau$} \State \Return \textbf{none} \Comment{empty} \EndIf
+  \State $\rho \gets \dfrac{\tau + m\beta}{m+1}$
+  \State $\sigma \gets \dfrac{2\rho}{\tau+\beta}$
+  \State $\delta \gets \dfrac{m^2(\tau+\beta)(\tau-\beta)}{(m^2-1)\,\tau^2}$
+  \State $p_c \gets p_c - (\rho/\omega)\,\tilde g$
+  \State $Q \gets Q - (\sigma/\omega)\,\tilde g\,\tilde g^{\top}$;\quad
+         $\kappa \gets \delta\,\kappa$
+\Until{$\operatorname{vol}(Q) < r$}
+\State \Return $p_c$
 \end{algorithmic}
 \end{algorithm}
 ```
@@ -624,6 +683,62 @@ the B-spline fits additionally use the monotone coefficient oracle. The
 anisotropic experiments use per-axis length scales $\ell_1, \ell_2$ and the
 four-parameter kernel
 $k = \sigma^2 \exp\!\big(-\tfrac{1}{2}[\,(dx)^2/\ell_1^2 + (dy)^2/\ell_2^2\,]\big)$.
+
+### Generating Correlated Test Data by Cholesky Factorization
+
+Because the true correlation function is unknown for real silicon data, the
+extraction methods are validated on *synthetic* data generated from a known
+kernel — the exact reverse of the extraction problem: a known kernel produces the
+data, and the extraction must recover it. The generator is the classical
+Cholesky construction of a correlated Gaussian field [@cressie1993statistics].
+
+Given sites $s_1, \dots, s_n$ and a kernel $K(\ell_1, \ell_2; \cdot)$, form the
+true covariance
+$$
+V = \sigma^2 K(\ell_1, \ell_2) + \tau^2 I ,
+$$ {#eq:truecov}
+where the nugget $\tau^2 I$ — the purely random component and measurement error of
+Section @sec:background — makes $V$ strictly positive definite. Factor
+$$
+V = L L^{\top}, \qquad L \text{ lower triangular},
+$$ {#eq:chol}
+and draw independent $x_m \sim \mathcal{N}(0, I)$; then
+$$
+y_m = L x_m \;\sim\; \mathcal{N}(0, V),
+$$ {#eq:corrsample}
+because $\operatorname{Cov}(Lx) = L\,\operatorname{Cov}(x)\,L^{\top} = LL^{\top} = V$.
+Pooling $M$ independent chips gives the biased sample covariance
+$$
+Y = \frac{1}{M}\sum_{m=1}^{M} y_m y_m^{\top},
+$$ {#eq:scov}
+which is exactly the input consumed by the estimators of Section @sec:problem.
+Algorithm \ref{alg:chol} lists the procedure.
+
+Cholesky is preferred because it is exact and simple, and its $O(n^3)$ cost is
+negligible for the $n \le 80$ sites used here. Eigendecomposition is also exact
+but more expensive; spectral and circulant-embedding methods are faster on grids
+but approximate, and the latter applies only to stationary fields. Anisotropy
+enters solely through the kernel $K(\ell_1, \ell_2)$, evaluated on the per-axis
+distances.
+
+```{=latex}
+\begin{algorithm}[t]
+\footnotesize
+\caption{Correlated test data by Cholesky factorization}
+\label{alg:chol}
+\begin{algorithmic}[1]
+\Require sites $\{s_i\}$, kernel $K$, scales $\ell$, amplitude $\sigma$, nugget $\tau$, chips $M$
+\State $V \gets \sigma^2 K(\ell) + \tau^2 I$ \Comment{true covariance, PD}
+\State $L \gets \textsc{Cholesky}(V)$ \Comment{$V = LL^{\top}$}
+\For{$m = 1$ \textbf{to} $M$}
+  \State $x_m \sim \mathcal{N}(0, I)$
+  \State $y_m \gets L x_m$ \Comment{correlated realization}
+\EndFor
+\State $Y \gets \frac{1}{M}\sum_{m=1}^{M} y_m y_m^{\top}$
+\State \Return $Y$
+\end{algorithmic}
+\end{algorithm}
+```
 
 ### Basis Conditioning and Knots
 
