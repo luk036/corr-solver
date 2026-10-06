@@ -943,8 +943,12 @@ misspecification, however, is not cured by more data: @fig:misspec is the
 matrix of length-scale errors obtained when data from one kernel is fitted with
 another. The diagonal is the correct kernel; fitting a smooth (Gaussian) kernel
 with a rough (exponential) one inflates the estimated length scale many-fold,
-whereas exponential data is fitted robustly by the other kernels, and the
-Matérn-$3/2$ kernel is the safest default when the process is unknown.
+whereas exponential data is fitted robustly by the other kernels. The asymmetry
+does not make any kernel a safe default: a misspecified kernel is simply wrong,
+and its lower residual can hide a systematic error that grows under
+extrapolation. When the shape is unknown the model should be validated --- for
+example by fitting several kernels and comparing their likelihoods on held-out
+data --- rather than assumed.
 Table \ref{tbl:aniso} reports the anisotropic extraction accuracy at $N = 200$:
 both length scales are recovered to within about one percent for the Gaussian and
 Matérn kernels and a few percent for the exponential. @fig:anisosurf shows
@@ -1063,14 +1067,15 @@ necessary but not sufficient discrete surrogate.
 ### When Is Non-Parametric CCP Warranted?
 
 The misspecification study (@fig:misspec) and the anisotropic experiments make
-the trade-off concrete: Matérn-$3/2$ is the most robust *parametric* default, and
-when the process family is known, fitting that family directly is both simpler
-and more accurate than any non-parametric fit. The non-parametric machinery is
-warranted when the shape is genuinely unknown — in particular when the
-correlation is non-monotone, which no standard parametric kernel represents — or
-when a smooth, shape-agnostic curve is required. In those regimes the clamped,
-monotone B-spline fitted by the CCP is the method of choice; otherwise a Matérn
-baseline is the better engineering decision.
+the trade-off concrete: no parametric kernel is a safe default, since a
+misspecified kernel is wrong whichever one is chosen. When the process family is
+known, fitting that family directly is both simpler and more accurate than any
+non-parametric fit. The non-parametric machinery is warranted when the shape is
+genuinely unknown — in particular when the correlation is non-monotone, which no
+standard parametric kernel represents — or when a smooth, shape-agnostic curve is
+required. In those regimes the clamped, monotone B-spline fitted by the CCP is
+the method of choice; otherwise, when a parametric family is known to apply,
+fitting it remains the better engineering decision.
 
 ## Conclusion {#sec:conclusion}
 
@@ -1095,8 +1100,8 @@ validation on measured data is the key next step. Second, the choice of
 objective matters as much as the choice of solver — LSQ tracks the correlation
 shape more faithfully while the MLE delivers a calibrated likelihood — and the
 non-parametric CCP earns its complexity only when the parametric family is
-genuinely unknown or the correlation is non-monotone. Where a Matérn baseline
-applies, it remains the simpler and more accurate default.
+genuinely unknown or the correlation is non-monotone. When a parametric family
+genuinely applies, fitting it remains the simpler and more accurate choice.
 
 ## Code Availability
 
