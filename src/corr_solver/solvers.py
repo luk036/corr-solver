@@ -47,8 +47,16 @@ class SolverConfig:
     max_iters: int = 2000
 
     def options(self) -> Options:
-        """Return the ellalgo :class:`~ellalgo.ell_config.Options` for this config."""
-        return Options(max_iters=self.max_iters, tolerance=self.tolerance)
+        """Return the ellalgo :class:`~ellalgo.ell_config.Options` for this config.
+
+        Assign the fields instead of passing constructor kwargs: released
+        ``ellalgo`` defines :class:`Options` with class-level defaults and no
+        ``__init__``, which works with both that and the dev dataclass.
+        """
+        options = Options()
+        options.max_iters = self.max_iters
+        options.tolerance = self.tolerance
+        return options
 
 
 class Layout(Protocol):
