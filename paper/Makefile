@@ -32,7 +32,7 @@ FLAGS  := -F pandoc-crossref --citeproc -s -t latex -N --reference-links \
 FIG_SVG := $(wildcard figures/*.svg)
 FIG_PDF := $(FIG_SVG:.svg=.pdf)
 
-.PHONY: paper figures clean
+.PHONY: paper slides figures clean
 
 paper: spatial.pdf
 
@@ -44,5 +44,22 @@ figures: $(FIG_PDF)
 figures/%.pdf: figures/%.svg
 	python -c "import cairosvg,sys; cairosvg.svg2pdf(url=sys.argv[1], write_to=sys.argv[2])" "$<" "$@"
 
+# --- Beamer slides ---------------------------------------------------------
+# The deck needs LuaLaTeX (emoji font fallback) and two passes (outline and
+# section navigation), so emit slides.tex with pandoc, then run lualatex twice.
+# The preamble is a CLI flag: pandoc mangles raw LaTeX in YAML header-includes.
+slides: slides.pdf
+
+slides.tex: slides.md beamer.yaml preamble.tex spatial.bib ieee.csl
+	$(PANDOC) --citeproc -s -t beamer --slide-level=2 \
+	  --metadata-file=beamer.yaml --include-in-header=preamble.tex \
+	  slides.md -o $@
+
+slides.pdf: slides.tex $(FIG_PDF)
+	lualatex -interaction=nonstopmode -halt-on-error slides.tex
+	lualatex -interaction=nonstopmode -halt-on-error slides.tex
+
 clean:
-	-@rm -f spatial.tex spatial.aux spatial.log spatial.out spatial.toc ; true
+	-@rm -f spatial.tex spatial.aux spatial.log spatial.out spatial.toc \
+	       slides.tex slides.aux slides.log slides.out slides.toc \
+	       slides.nav slides.snm slides.vrb ; true
