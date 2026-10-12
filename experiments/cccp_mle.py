@@ -24,7 +24,6 @@ from corr_solver.corr_oracle import (
 from corr_solver.kernels import exponential
 from corr_solver.lsq_corr_oracle import lsq_oracle
 from corr_solver.math_utils import mle_obj, omega_of
-from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.solvers import lsq_corr_core2, mle_corr_core
 
 __all__ = [
@@ -73,18 +72,14 @@ def main():
     ]
     for name, Y, true in cases:
         x_lsq = corr_poly(Y, site, m, lsq_oracle, lsq_corr_core2)[0].c[::-1]
-        x_mle = corr_poly(Y, site, m, mle_oracle, mle_corr_core)[0].c[::-1]
         x_cccp, n_outer = cccp_mle(Y, site, m, x_lsq)
 
         print(f"\n=== {name} ===")
-        print(
-            f"{'method':10s} {'f (MLE obj)':>12s} {'relerr vs true':>15s} {'2Y margin':>10s}"
-        )
-        for tag, x in [("LSQ", x_lsq), ("MLE(2Y)", x_mle), ("CCP", x_cccp)]:
+        print(f"{'method':10s} {'f (MLE obj)':>12s} {'relerr vs true':>15s}")
+        for tag, x in [("LSQ", x_lsq), ("CCP", x_cccp)]:
             Om = omega_of(x, Sigma)
-            margin = np.linalg.eigvalsh(2 * Y - Om).min()
             rel = np.linalg.norm(true - Om, "fro") / np.linalg.norm(true, "fro")
-            print(f"{tag:10s} {mle_obj(x, Sigma, Y):12.4f} {rel:15.4f} {margin:10.4f}")
+            print(f"{tag:10s} {mle_obj(x, Sigma, Y):12.4f} {rel:15.4f}")
         print(f"CCP outer iterations: {n_outer}")
 
 

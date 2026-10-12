@@ -9,9 +9,8 @@ from corr_solver.corr_oracle import (
     create_2d_isotropic,
 )
 from corr_solver.lsq_corr_oracle import lsq_oracle
-from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.qmi_oracle import QMIOracle
-from corr_solver.solvers import lsq_corr_core, lsq_corr_core2, mle_corr_core
+from corr_solver.solvers import lsq_corr_core, lsq_corr_core2
 
 
 def lsq_corr_poly2(Y: np.ndarray, site: np.ndarray, n: int):
@@ -40,21 +39,6 @@ def lsq_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
         [type]: [description]
     """
     return corr_poly(Y, site, n, QMIOracle, lsq_corr_core)
-
-
-def mle_corr_poly(Y: np.ndarray, site: np.ndarray, n: int):
-    """[summary]
-
-    Arguments:
-        Y ([type]): [description]
-        site ([type]): [description]
-        n ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    _ = np.linalg.cholesky(Y)  # test if Y is SPD.
-    return corr_poly(Y, site, n, mle_oracle, mle_corr_core)
 
 
 def test_data(site: np.ndarray) -> None:
@@ -92,9 +76,3 @@ def test_create_2d_anisotropic_is_symmetric(site: np.ndarray) -> None:
     Y = create_2d_anisotropic(site, 1.0, 3.0, N=100)
     assert Y.shape == (site.shape[0], site.shape[0])
     assert Y == approx(Y.T)
-
-
-# def test_mle_corr_poly(site: np.ndarray, Y: np.ndarray) -> None:
-#     _, num_iters, feasible = mle_corr_poly(Y, site, 4)
-#     assert feasible
-#     assert num_iters <= 255

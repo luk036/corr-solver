@@ -86,9 +86,10 @@ def fig_corr(site, problems, rows, out: Path):
                 lw=1.5,
                 label="true kernel y",
             )
-        for solver, col in [("LSQ-opt", C["blue"]), ("MLE", C["red"])]:
-            r = next(r for r in rows if r["solver"] == solver and r["problem"] == pname)
-            ax.plot(grid, r["fitted"](grid), lw=2.4, color=col, label=solver)
+        r = next(
+            r for r in rows if r["solver"] == "LSQ-opt" and r["problem"] == pname
+        )
+        ax.plot(grid, r["fitted"](grid), lw=2.4, color=C["blue"], label="LSQ-opt")
         ax.set_title(pname, color=C["dark"])
         ax.set_xlabel("Distance h")
         ax.set_ylabel("Covariance")
@@ -189,7 +190,7 @@ def cccp_history(Y, site, m, x0, n_outer=30):
     return x, hist
 
 
-def fig_cccp(Y, site, m, x_lsq, x_mle, out: Path):
+def fig_cccp(Y, site, m, x_lsq, out: Path):
     Sig = construct_poly_matrix(site, m)
     D = construct_distance_matrix(site)
     true = 4.0 * np.exp(-0.12 * D**2)
@@ -209,24 +210,17 @@ def fig_cccp(Y, site, m, x_lsq, x_mle, out: Path):
         lw=1.5,
         label=f"free MLE = {cccp_obj_final:.3f}",
     )
-    ax1.axhline(
-        mle_obj(x_mle, Sig, Y),
-        color=C["red"],
-        ls=":",
-        lw=1.8,
-        label=f"MLE(2Y) = {mle_obj(x_mle, Sig, Y):.2f}",
-    )
     ax1.set_xlabel("CCP outer iteration")
     ax1.set_ylabel("f(Ω) = log det Ω + Tr(Ω⁻¹Y)")
     ax1.set_title("CCP decreases f monotonically", color=C["dark"])
     ax1.legend(fontsize=9)
     ax1.grid(True, alpha=0.25)
 
-    methods = ["LSQ", "MLE(2Y)", "CCP"]
-    xs = [x_lsq, x_mle, x_cccp]
+    methods = ["LSQ", "CCP"]
+    xs = [x_lsq, x_cccp]
     objs = [mle_obj(x, Sig, Y) for x in xs]
     rels = [relerr(x) for x in xs]
-    xpos = np.arange(3)
+    xpos = np.arange(2)
     w = 0.38
     ax2.bar(xpos - w / 2, objs, w, color=C["purple"], label="MLE objective f")
     ax2b = ax2.twinx()
@@ -235,7 +229,7 @@ def fig_cccp(Y, site, m, x_lsq, x_mle, out: Path):
     ax2.set_xticklabels(methods)
     ax2.set_ylabel("MLE objective f", color=C["purple"])
     ax2b.set_ylabel("relative error vs true kernel", color=C["orange"])
-    ax2.set_title("CCP removes the 2Y-induced bias", color=C["dark"])
+    ax2.set_title("CCP improves the MLE objective", color=C["dark"])
     ax2.grid(True, axis="y", alpha=0.25)
     fig.tight_layout()
     fig.savefig(out / "fig_cccp.svg", format="svg")
@@ -271,16 +265,11 @@ def main(out: Path):
         for r in rows
         if r["solver"] == "LSQ-opt" and r["problem"] == "iso (1,1)"
     )
-    x_mle = next(
-        r["fitted"]
-        for r in rows
-        if r["solver"] == "MLE" and r["problem"] == "iso (1,1)"
-    )
 
     fig_corr(site, problems, rows, out)
     fig_metrics(rows, out)
     fig_nonconvex(iso_Y, out)
-    fig_cccp(iso_Y, site, m, np.asarray(x_lsq.c)[::-1], np.asarray(x_mle.c)[::-1], out)
+    fig_cccp(iso_Y, site, m, np.asarray(x_lsq.c)[::-1], out)
     print("wrote:", *sorted(p.name for p in out.glob("fig_*.svg")))
 
 

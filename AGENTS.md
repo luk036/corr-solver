@@ -48,7 +48,7 @@ tox -e doctests       # Run doctests
 - Version managed via setuptools_scm (`no-guess-dev` scheme)
 
 ### Naming Conventions
-- **Classes**: PascalCase (e.g., `QMIOracle`, `GMIOracle`); `mle_oracle` is an existing snake_case exception
+- **Classes**: PascalCase (e.g., `QMIOracle`, `GMIOracle`); `cccp_mle_oracle` is an existing snake_case exception
 - **Functions/Methods**: snake_case (e.g., `create_2d_sites`, `construct_poly_matrix`, `corr_poly`)
 - **Type aliases**: Short PascalCase (e.g., `Arr = np.ndarray`, `Cut = Tuple[Arr, float]`)
 - **Local constants**: lowercase (e.g., `sdkern`, `var`, `tau`)
@@ -114,7 +114,7 @@ tox -e doctests       # Run doctests
 ## Key Project Context
 
 corr-solver fits correlation/error-correction polynomials to biased covariance matrices:
-- **MLE oracle**: `mle_oracle` solves maximum-likelihood estimation subject to linear matrix inequality (LMI) constraints
+- **MLE oracle**: `cccp_mle_oracle` solves maximum-likelihood estimation with the convex-concave procedure (CCP), sharing the `MleOptimOracle` base
 - **LSQ variants**: `lsq_oracle` / `QMIOracle` provide least-squares alternatives
 - **Site generation**: uses Halton low-discrepancy sequences to place 2D sites and build distance/correlation matrices
 - **Solver backend**: ellipsoid method via `ellalgo` cutting-plane oracles (`cutting_plane_optim`, `bsearch`)

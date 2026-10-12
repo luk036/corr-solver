@@ -1,18 +1,15 @@
 """
-Maximum-likelihood estimation oracle.
+Shared base class for the maximum-likelihood estimation oracles.
 
-Fits coefficients ``p`` of ``Omega(p)`` to a biased sample covariance matrix
-``Y`` by minimizing ``log det Omega(p) + Tr(Omega(p)^{-1} Y)`` subject to
-``2Y >= Omega(p) >= 0``. Feasibility is checked with the ``lmi`` and ``lmi0``
-oracles; the objective and its gradient are then compared against the
-best-so-far value ``t``.
+:class:`MleOptimOracle` provides the ``assess_optim`` template shared by the
+MLE-style oracles: check feasibility, take a positive-semidefinite square root
+of the feasible matrix, and compare the objective and its gradient against the
+best-so-far value ``t``. The concrete MLE solver is the convex-concave procedure
+in :mod:`corr_solver.cccp_mle_oracle`.
 """
 
-from typing import Any, List, Optional, Tuple
+from typing import Any, Optional, Tuple
 
-from .backends import default_backend
-from .math_utils import mle_value_and_grad
-from .protocols import OracleBackend
 from .types import Arr, Assessment, Cut
 
 
@@ -55,35 +52,3 @@ class MleOptimOracle:
         if (f := f1 - t) >= 0:
             return Assessment((g, f), None)
         return Assessment((g, 0.0), f1)
-
-
-class mle_oracle(MleOptimOracle):
-    """Maximum likelihood estimation:
-
-    min  log det Ω(p) + Tr( Ω(p)^{-1} Y )
-    s.t. 2Y ⪰ Ω(p) ⪰ 0,
-    """
-
-    def __init__(
-        self, Sigma: List[Arr], Y: Arr, backend: Optional[OracleBackend] = None
-    ):
-        if backend is None:
-            backend = default_backend()
-        self.Y = Y
-        self.Sigma = Sigma
-        self.lmi0 = backend.lmi0(Sigma)
-        self.lmi = backend.lmi(Sigma, 2 * Y)
-
-    def _first_cut(self, x: Arr) -> Optional[Cut]:
-        if cut := self.lmi.assess_feas(x):
-            return cut
-        return self.lmi0.assess_feas(x)
-
-    def _sqrt(self) -> Arr:
-        return self.lmi0.sqrt()
-
-    def _value_and_grad(self, x: Arr, R: Arr) -> Tuple[float, Arr]:
-        return mle_value_and_grad(R, self.Y, self.Sigma)
-
-
-MLEOracle = mle_oracle

@@ -1,18 +1,16 @@
-"""Compare the LSQ and MLE correlation solvers on isotropic and anisotropic problems.
+"""Compare the LSQ correlation solvers on isotropic and anisotropic problems.
 
 Isotropic data comes from ``create_2d_isotropic``; anisotropic data reuses the
 same Gaussian kernel with per-axis widths,
-``exp(-0.12 * ((dx/lx)^2 + (dy/ly)^2))``. Both solver families fit the same
-Euclidean-distance basis (polynomial or B-spline), so the anisotropic runs
-expose model misspecification.
+``exp(-0.12 * ((dx/lx)^2 + (dy/ly)^2))``. The solvers fit either a polynomial
+or a B-spline Euclidean-distance basis, so the anisotropic runs expose model
+misspecification.
 
-The two solvers optimise different problems: LSQ minimises the Frobenius
-residual ``||Y - Omega||`` over ``Omega >= 0``, whereas MLE minimises
-``log det Omega + Tr(Omega^-1 Y)`` over ``0 <= Omega <= 2Y``. The ``2Y_ok``
-column records whether a returned ``Omega`` satisfies MLE's upper bound, which
-is why LSQ can show a lower ``mle_obj`` at a point MLE is not allowed to reach.
-The correlation figure overlays the original generating covariance (black
-markers) and its per-axis kernels (black dashed/dotted lines) on the fits.
+The solvers minimise the Frobenius residual ``||Y - Omega||`` over
+``Omega >= 0``. The ``mle_obj`` column reports ``log det Omega + Tr(Omega^-1 Y)``
+at the fit for reference. The correlation figure overlays the original
+generating covariance (black markers) and its per-axis kernels (black
+dashed/dotted lines) on the fits.
 Results are printed as a table and saved as PNG figures.
 """
 
@@ -36,9 +34,8 @@ from corr_solver.corr_oracle import (
     create_2d_sites,
 )
 from corr_solver.lsq_corr_oracle import lsq_oracle
-from corr_solver.mle_corr_oracle import mle_oracle
 from corr_solver.qmi_oracle import QMIOracle
-from corr_solver.solvers import lsq_corr_core, lsq_corr_core2, mle_corr_core
+from corr_solver.solvers import lsq_corr_core, lsq_corr_core2
 
 try:
     import matplotlib
@@ -56,16 +53,14 @@ Arr = np.ndarray
 SOLVERS: Dict[str, Dict[str, Any]] = {
     "LSQ-QMI": {"basis": "poly", "oracle": QMIOracle, "core": lsq_corr_core},
     "LSQ-opt": {"basis": "poly", "oracle": lsq_oracle, "core": lsq_corr_core2},
-    "MLE": {"basis": "poly", "oracle": mle_oracle, "core": mle_corr_core},
     "LSQ-opt-bspl": {
         "basis": "bspline",
         "oracle": lsq_oracle,
         "core": lsq_corr_core2,
     },
-    "MLE-bspl": {"basis": "bspline", "oracle": mle_oracle, "core": mle_corr_core},
 }
 
-POLY_SOLVERS = ["LSQ-QMI", "LSQ-opt", "MLE"]
+POLY_SOLVERS = ["LSQ-QMI", "LSQ-opt"]
 
 
 def run_solver(
@@ -98,7 +93,6 @@ def run_solver(
         "rel_err": resid / normY,
         "resid": resid,
         "mle_obj": mle_objective(omega, Y),
-        "mle_constr": bool(np.linalg.eigvalsh(2 * Y - omega).min() >= -1e-6),
         "fitted": fitted,
     }
 
@@ -106,7 +100,7 @@ def run_solver(
 def format_table(rows: List[Dict[str, Any]]) -> str:
     header = (
         f"{'solver':14s} {'basis':8s} {'problem':12s} {'feas':5s} "
-        f"{'iters':>6s} {'rel_err':>10s} {'mle_obj':>10s} {'2Y_ok':>6s} "
+        f"{'iters':>6s} {'rel_err':>10s} {'mle_obj':>10s} "
         f"{'time(s)':>8s}"
     )
     lines = [header, "-" * len(header)]
@@ -114,7 +108,7 @@ def format_table(rows: List[Dict[str, Any]]) -> str:
         lines.append(
             f"{r['solver']:14s} {r['basis']:8s} {r['problem']:12s} "
             f"{str(r['feasible']):5s} {r['iters']:6d} {r['rel_err']:10.4e} "
-            f"{r['mle_obj']:10.3f} {str(r['mle_constr']):>6s} {r['time']:8.2f}"
+            f"{r['mle_obj']:10.3f} {r['time']:8.2f}"
         )
     return "\n".join(lines)
 

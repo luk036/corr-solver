@@ -29,7 +29,7 @@ from .types import Arr, Cut
 class PureLMI0Oracle:
     """``ellalgo``'s ``LMI0Oracle`` plus the uniform :meth:`sqrt` accessor.
 
-    ``mle_oracle`` asks every backend's ``lmi0`` for ``sqrt``; ``ellalgo`` only
+    The MLE oracles ask every backend's ``lmi0`` for ``sqrt``; ``ellalgo`` only
     exposes it through ``ldlt_mgr``, so this adapter levels the interface.
     Composing rather than subclassing keeps it decoupled from ellalgo internals.
     """
@@ -66,12 +66,6 @@ class PurePythonBackend:
         from .lsq_corr_oracle import lsq_oracle
 
         return lsq_oracle(F, F0, self)
-
-    def mle(self, Sigma: List[Arr], Y: Arr) -> OptimizationOracle:
-        """Return a maximum-likelihood optimization oracle."""
-        from .mle_corr_oracle import mle_oracle
-
-        return mle_oracle(Sigma, Y, self)
 
 
 def default_backend() -> OracleBackend:

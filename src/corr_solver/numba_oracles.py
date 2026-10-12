@@ -1,9 +1,8 @@
 """
 JIT-compiled separation oracles (optional accelerator).
 
-Drop-in replacements for :class:`~corr_solver.qmi_oracle.QMIOracle`,
-:class:`~corr_solver.lsq_corr_oracle.lsq_oracle` and
-:class:`~corr_solver.mle_corr_oracle.mle_oracle`, with the LDL^T factorization,
+Drop-in replacements for :class:`~corr_solver.qmi_oracle.QMIOracle` and
+:class:`~corr_solver.lsq_corr_oracle.lsq_oracle`, with the LDL^T factorization,
 the basis-matrix assembly and the subgradient evaluation compiled by Numba.
 
 The pure-Python oracles reach the same answer but spend most of their time in
@@ -356,9 +355,3 @@ class NumbaBackend:
         from .lsq_corr_oracle import lsq_oracle
 
         return lsq_oracle(F, F0, self)
-
-    def mle(self, Sigma: List[Arr], Y: Arr) -> OptimizationOracle:
-        """Return a maximum-likelihood optimization oracle."""
-        from .mle_corr_oracle import mle_oracle
-
-        return mle_oracle(Sigma, Y, self)

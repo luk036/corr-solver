@@ -12,23 +12,7 @@ from corr_solver.corr_bspline_oracle import (
 )
 from corr_solver.corr_oracle import construct_distance_matrix, construct_poly_matrix
 from corr_solver.lsq_corr_oracle import lsq_oracle
-from corr_solver.mle_corr_oracle import mle_oracle
-from corr_solver.solvers import lsq_corr_core2, mle_corr_core
-
-
-def mle_corr_bspline(Y: np.ndarray, site: np.ndarray, n: int):
-    """[summary]
-
-    Arguments:
-        Y ([type]): [description]
-        site ([type]): [description]
-        n ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    _ = np.linalg.cholesky(Y)  # test if Y is SPD.
-    return corr_bspline(Y, site, n, mle_oracle, mle_corr_core)
+from corr_solver.solvers import lsq_corr_core2
 
 
 def lsq_corr_bspline2(Y: np.ndarray, site: np.ndarray, n: int):
@@ -54,12 +38,6 @@ def test_lsq_corr_bspline2(site: np.ndarray, Y: np.ndarray) -> None:
     _, num_iters, feasible = lsq_corr_bspline2(Y, site, 4)
     assert feasible
     assert num_iters <= 1054
-
-
-def test_mle_corr_bspline(site: np.ndarray, Y: np.ndarray) -> None:
-    _, num_iters, feasible = mle_corr_bspline(Y, site, 4)
-    assert feasible
-    assert num_iters <= 388
 
 
 def test_bspline_basis_is_well_conditioned(site: np.ndarray) -> None:

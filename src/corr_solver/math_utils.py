@@ -70,21 +70,3 @@ def inverse_sqrt_gram(R: Arr, Y: Arr) -> Tuple[Arr, Arr]:
     invR = np.linalg.inv(R)
     S = invR @ invR.T
     return S, S @ Y
-
-
-def mle_value_and_grad(R: Arr, Y: Arr, Sigma: List[Arr]) -> Tuple[float, Arr]:
-    """Return the MLE objective ``2 sum log diag(R) + Tr(SY)`` and its gradient.
-
-    :param R: upper-triangular factor with ``Omega = R^T R``
-    :param Y: biased sample covariance matrix
-    :param Sigma: basis matrices
-    :return: the pair ``(f1, g)``
-    """
-    S, SY = inverse_sqrt_gram(R, Y)
-    f1 = 2 * np.sum(np.log(np.diag(R))) + np.trace(SY)
-    # g[i] = tr(S @ Sigma[i]) - tr(S @ Sigma[i] @ SY)
-    #      = tr((S - SY @ S) @ Sigma[i])      [cyclic perm of trace]
-    #      = sum((S - SY @ S).T * Sigma[i])    [Frobenius inner prod]
-    V = S - SY @ S  # pre-compute once, n×n
-    g = np.array([np.sum(V.T * F) for F in Sigma])
-    return float(f1), g

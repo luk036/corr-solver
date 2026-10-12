@@ -90,7 +90,3 @@ class OracleBackend(Protocol):
     def lsq(self, F: List[Arr], F0: Arr) -> OptimizationOracle:
         """Return a least-squares optimization oracle."""
         ...
-
-    def mle(self, Sigma: List[Arr], Y: Arr) -> OptimizationOracle:
-        """Return a maximum-likelihood optimization oracle."""
-        ...

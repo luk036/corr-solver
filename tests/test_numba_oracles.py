@@ -11,17 +11,10 @@ pytest.importorskip("numba")
 from ellalgo.oracles.ldlt_mgr import LDLTMgr  # noqa: E402
 
 from corr_solver.backends import make_backend  # noqa: E402
-from corr_solver.basis import generate_bspline_info  # noqa: E402
-from corr_solver.corr_bspline_oracle import corr_bspline  # noqa: E402
 from corr_solver.corr_oracle import construct_poly_matrix, corr_poly  # noqa: E402
 from corr_solver.lsq_corr_oracle import lsq_oracle  # noqa: E402
-from corr_solver.mle_corr_oracle import mle_oracle  # noqa: E402
 from corr_solver.numba_oracles import NumbaBackend, NumbaQMIOracle, _ldlt  # noqa: E402
-from corr_solver.solvers import (  # noqa: E402
-    lsq_corr_core,
-    lsq_corr_core2,
-    mle_corr_core,
-)
+from corr_solver.solvers import lsq_corr_core, lsq_corr_core2  # noqa: E402
 
 M_BASIS = 4
 
@@ -30,12 +23,6 @@ M_BASIS = 4
 def sigma(site: np.ndarray) -> list:
     """[summary]"""
     return construct_poly_matrix(site, M_BASIS)
-
-
-@pytest.fixture(scope="module")
-def sigma_bspline(site: np.ndarray) -> list:
-    """[summary]"""
-    return generate_bspline_info(site, M_BASIS)[0]
 
 
 def test_ldlt_matches_ldlt_mgr() -> None:
@@ -113,8 +100,8 @@ def test_lmi0_oracle_matches(sigma: list) -> None:
 def test_lmi_oracle_matches(sigma: list, Y: np.ndarray) -> None:
     """[summary]"""
     rng = np.random.default_rng(17)
-    ref = make_backend("python").lmi(sigma, 2 * Y)
-    jit = make_backend("numba").lmi(sigma, 2 * Y)
+    ref = make_backend("python").lmi(sigma, Y)
+    jit = make_backend("numba").lmi(sigma, Y)
     seen_infeasible = 0
     for _ in range(40):
         x = rng.standard_normal(M_BASIS)
@@ -146,26 +133,6 @@ def _lsq_trajectory(Y: np.ndarray, site: np.ndarray) -> list:
             return super().assess_optim(x, t)
 
     corr_poly(Y, site, M_BASIS, lambda F, F0: Recorder(F, F0), lsq_corr_core2)
-    return calls
-
-
-def _mle_trajectory(Y: np.ndarray, site: np.ndarray) -> list:
-    """[summary]
-
-    Returns:
-        [type]: [description]
-    """
-    calls: list = []
-
-    class Recorder(mle_oracle):
-        def __init__(self, Sigma: list, Y: np.ndarray) -> None:
-            super().__init__(Sigma, Y, NumbaBackend())
-
-        def assess_optim(self, x: np.ndarray, t: float) -> Any:
-            calls.append((np.array(x), t))
-            return super().assess_optim(x, t)
-
-    corr_bspline(Y, site, M_BASIS, lambda F, F0: Recorder(F, F0), mle_corr_core)
     return calls
 
 
@@ -219,32 +186,6 @@ def test_lsq_oracle_verdicts_along_trajectory(
     assert seen_improve > 0
 
 
-def test_mle_oracle_matches(
-    site: np.ndarray, Y: np.ndarray, sigma_bspline: list
-) -> None:
-    """[summary]
-
-    The MLE oracle has no quadratic-matrix-inequality term, so its cuts agree
-    with the pure-Python oracle to floating-point precision rather than merely
-    to solver-equivalence.
-    """
-    calls = _mle_trajectory(Y, site)
-    assert calls
-    ref = make_backend("python").mle(sigma_bspline, Y)
-    jit = make_backend("numba").mle(sigma_bspline, Y)
-    seen_improve = 0
-    for x, t in calls:
-        cut_ref, val_ref = ref.assess_optim(x, t)
-        cut_jit, val_jit = jit.assess_optim(x, t)
-        assert (val_ref is None) == (val_jit is None)
-        assert cut_ref[0] == approx(cut_jit[0], rel=1e-8, abs=1e-8)
-        assert cut_ref[1] == approx(cut_jit[1], rel=1e-2, abs=1e-6)
-        if val_ref is not None:
-            seen_improve += 1
-
-    assert seen_improve > 0
-
-
 def test_make_backend_rejects_unknown() -> None:
     """[summary]"""
     with pytest.raises(ValueError):
@@ -269,16 +210,3 @@ def test_numba_lsq_corr_poly2(site: np.ndarray, Y: np.ndarray) -> None:
     )
     assert feasible
     assert num_iters <= 1095
-
-
-def test_numba_mle_corr_bspline(site: np.ndarray, Y: np.ndarray) -> None:
-    """[summary]"""
-    _, num_iters, feasible = corr_bspline(
-        Y,
-        site,
-        M_BASIS,
-        lambda Sigma, Y: mle_oracle(Sigma, Y, NumbaBackend()),
-        mle_corr_core,
-    )
-    assert feasible
-    assert num_iters <= 388

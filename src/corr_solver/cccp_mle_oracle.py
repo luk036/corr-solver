@@ -12,8 +12,7 @@ The first round uses :func:`~corr_solver.math_utils.mle_corr_mtx` directly as th
 (always positive-definite) initial majorization matrix ``Omega_0^-1``, so it is
 invertible even when the least-squares start is singular.
 The surrogate carries no ``Omega <= 2Y`` upper bound, so it removes the
-non-convexity that the ``2Y`` constraint of
-:class:`~corr_solver.mle_corr_oracle.mle_oracle` was papering over.
+non-convexity that a hard ``2Y`` constraint would otherwise paper over.
 """
 
 from typing import Any, Callable, List, Optional, Tuple

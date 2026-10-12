@@ -9,21 +9,11 @@
 
 > Correlation Solver Python Code
 
-This code defines a class called mle_oracle which is designed to solve a maximum likelihood estimation problem. The purpose of this code is to find the best parameters for a statistical model based on observed data, while satisfying certain constraints.
+This code solves a family-constrained maximum likelihood estimation (MLE) problem: fitting the coefficients of a covariance model `Omega(x)` to a biased sample covariance `Y` by minimizing `log det Omega + Tr(Omega^-1 Y)`. Without a hard upper bound on `Omega` this objective is non-convex, so the solver uses the convex-concave procedure (CCP): each round linearizes the concave part at the current iterate and minimizes the resulting convex surrogate with the same cutting-plane machinery.
 
-The mle_oracle class takes two inputs when initialized: Sigma and Y. Sigma represents a covariance matrix, which describes how different variables in a dataset are related to each other. Y is a biased sample covariance matrix, which is an estimate of the true covariance based on observed data.
+The shared base class `MleOptimOracle` defines the `assess_optim` control flow: it checks feasibility, takes a positive-semidefinite square root of the feasible matrix, and compares the objective and its gradient against the best-so-far value `t`. The concrete oracle for each CCP round, `cccp_mle_oracle`, plugs in the linearized objective and gradient, and `cccp_mle` drives the outer iterations from a least-squares starting point.
 
-The main output of this class is produced by the assess_optim method. This method takes two inputs: x (a set of coefficients) and t (the best optimal value found so far). It returns a tuple containing information about whether the current solution is feasible and optimal, along with some additional values used in the optimization process.
-
-To achieve its purpose, the code uses a technique called linear matrix inequality (LMI) optimization. It creates two LMI oracles (lmi0 and lmi) which are used to check if the current solution satisfies certain constraints. The assess_optim method first checks if the solution is feasible using these oracles. If it's not feasible, it returns information about why it's not feasible.
-
-If the solution is feasible, the method then calculates a value f1, which represents the objective function of the maximum likelihood estimation problem. This calculation involves matrix operations like inversion, multiplication, and calculating traces and determinants. The method also computes a gradient g, which indicates how the objective function changes with respect to small changes in the input x.
-
-Finally, the method compares the calculated f1 with the input t to determine if a better solution has been found. If f1 is better than t, it returns this new value along with the gradient. Otherwise, it returns information that can be used to continue the optimization process.
-
-The important logic flows in this code include the feasibility checks, the calculation of the objective function and its gradient, and the comparison of the current solution with the best known solution. The data transformations mainly involve matrix operations on the input covariance matrices.
-
-Overall, this code provides a way to solve a complex statistical optimization problem by iteratively improving a solution while ensuring it satisfies certain constraints. It's a building block that would typically be used as part of a larger optimization algorithm.
+The main output is the coefficient vector `x` of `Omega(x)` along with the number of CCP rounds used. Feasibility is enforced with linear matrix inequality (LMI) oracles, and the objective is evaluated with matrix operations such as inversion, multiplication, and trace/determinant computations.
 
 ## Dependencies
 
