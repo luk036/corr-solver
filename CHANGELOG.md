@@ -2,6 +2,14 @@
 
 All notable changes to corr-solver will be documented in this file.
 
+## Version 0.3 (2026-11-20)
+
+### Code Cleanup
+- **Removed the 2Y-constrained MLE solver**: Deleted `mle_oracle`/`MLEOracle` and the 2Y LMI, the `.mle()` backend/protocol factories, and `mle_value_and_grad`; the shared `MleOptimOracle` base remains for the supported CCP path. Removed the affected tests, experiment arms, and documentation. (#31cd70f)
+
+### Maintenance
+- **Package metadata and publishing**: Corrected the copy-pasted description, fixed the PyScaffold placeholder fields, and added the PyPI publish workflow. (#6c9682b, #2bfb40f)
+
 ## Version 0.2 (2026-10-09)
 
 ### Features
